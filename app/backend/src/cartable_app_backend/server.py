@@ -9,12 +9,12 @@ import os
 import subprocess
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
-from . import agent, bulletin_html, calendar_sync, db
+from . import agent, bulletin_html, calendar_sync, db, settings as settings_mod
 
 log = logging.getLogger("cartable_app")
 app = FastAPI(title="Cartable", version="0.1.0")
@@ -50,6 +50,20 @@ class TriggerSyncResponse(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     session_id: str | None = None
+
+
+class AccountUpdate(BaseModel):
+    pronote_url: str
+    auth_mode: str = "password"
+    username: str
+    password: str = ""  # blank = keep existing
+    ent_provider: str = ""
+    child_name: str = ""
+
+
+class AutoSyncRequest(BaseModel):
+    enabled: bool
+    interval_seconds: int = 1800
 
 
 # ---------- read-only endpoints ---------------------------------------------
@@ -175,6 +189,79 @@ def bulletin_render(period_id: str) -> HTMLResponse:
     if b is None:
         raise HTTPException(404, f"No bulletin for period {period_id}")
     return HTMLResponse(bulletin_html.render(b))
+
+
+# ---------- settings --------------------------------------------------------
+
+
+@app.get("/api/settings/account")
+def settings_account() -> dict:
+    return settings_mod.account_info()
+
+
+@app.post("/api/settings/account")
+def settings_account_update(req: AccountUpdate) -> dict:
+    try:
+        return settings_mod.update_account(req.model_dump())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/api/settings/logout")
+def settings_logout() -> dict:
+    return settings_mod.logout()
+
+
+@app.get("/api/settings/version")
+def settings_version() -> dict:
+    return settings_mod.version_info()
+
+
+@app.get("/api/settings/update-check")
+async def settings_update_check() -> dict:
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, settings_mod.check_update)
+
+
+@app.get("/api/settings/auto-sync")
+def settings_autosync() -> dict:
+    return settings_mod.autosync_status()
+
+
+@app.post("/api/settings/auto-sync")
+def settings_autosync_set(req: AutoSyncRequest) -> dict:
+    try:
+        if req.enabled:
+            return settings_mod.autosync_enable(req.interval_seconds)
+        return settings_mod.autosync_disable()
+    except (ValueError, FileNotFoundError) as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(500, str(exc)) from exc
+
+
+@app.get("/api/settings/backup")
+def settings_backup() -> Response:
+    try:
+        data = settings_mod.build_backup_zip()
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    return Response(
+        content=data,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f'attachment; filename="{settings_mod.backup_filename()}"',
+        },
+    )
+
+
+@app.post("/api/settings/restore")
+async def settings_restore(file: UploadFile = File(...)) -> dict:
+    content = await file.read()
+    try:
+        return settings_mod.restore_backup(content)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
 
 
 @app.get("/api/calendar/status")

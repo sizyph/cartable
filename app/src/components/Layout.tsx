@@ -2,13 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import clsx from "clsx";
 
-type View = "schedule" | "homework" | "grades" | "chat";
+type View = "schedule" | "homework" | "grades" | "chat" | "settings";
 
 const tabs: { id: View; label: string; hint: string }[] = [
   { id: "schedule", label: "Schedule", hint: "Lessons & exams" },
   { id: "homework", label: "Homework", hint: "Devoirs to do" },
   { id: "grades", label: "Grades", hint: "Notes & moyennes" },
   { id: "chat", label: "Chat", hint: "Ask Claude about school" },
+  { id: "settings", label: "Settings", hint: "Account, sync, backup" },
 ];
 
 export function Layout({ active, onChange, children }: {

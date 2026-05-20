@@ -66,6 +66,7 @@ dependencies = [
     { name = "google-auth" },
     { name = "google-auth-oauthlib" },
     { name = "python-dotenv" },
+    { name = "python-multipart" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -82,6 +83,7 @@ requires-dist = [
     { name = "google-auth", specifier = ">=2.53.0" },
     { name = "google-auth-oauthlib", specifier = ">=1.4.0" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
+    { name = "python-multipart", specifier = ">=0.0.29" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.47.0" },
 ]
 

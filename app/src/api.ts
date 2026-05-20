@@ -166,4 +166,68 @@ export const api = {
       lessons_seen: number;
       deduplicated: number;
     }>(`/api/calendar/sync?days=${days}`),
+
+  // ---- settings ----------------------------------------------------------
+  settingsAccount: () =>
+    get<{
+      pronote_url: string;
+      auth_mode: string;
+      username: string;
+      ent_provider: string;
+      child_name: string;
+      has_password: boolean;
+      env_path: string;
+      student: { name: string; class_name: string; establishment: string };
+    }>("/api/settings/account"),
+  settingsAccountUpdate: (body: {
+    pronote_url: string;
+    auth_mode: string;
+    username: string;
+    password?: string;
+    ent_provider?: string;
+    child_name?: string;
+  }) => post<{ ok: boolean }>("/api/settings/account", body),
+  settingsLogout: () => post<{ ok: boolean }>("/api/settings/logout"),
+  settingsVersion: () =>
+    get<{
+      version: string;
+      backend_started_at: number;
+      data_dir: string;
+      cartable_dir: string;
+      student_name: string;
+    }>("/api/settings/version"),
+  settingsUpdateCheck: () =>
+    get<{
+      ok: boolean;
+      error?: string;
+      note?: string;
+      current?: string;
+      latest?: string | null;
+      is_newer?: boolean;
+      html_url?: string;
+      name?: string;
+      published_at?: string;
+    }>("/api/settings/update-check"),
+  settingsAutoSyncStatus: () =>
+    get<{
+      installed: boolean;
+      loaded: boolean;
+      interval_seconds: number | null;
+      plist_target: string;
+      template_exists: boolean;
+    }>("/api/settings/auto-sync"),
+  settingsAutoSyncSet: (enabled: boolean, intervalSeconds = 1800) =>
+    post<{
+      installed: boolean;
+      loaded: boolean;
+      interval_seconds: number | null;
+    }>("/api/settings/auto-sync", { enabled, interval_seconds: intervalSeconds }),
+  settingsBackupUrl: () => `${base}/api/settings/backup`,
+  settingsRestore: async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const r = await fetch(`${base}/api/settings/restore`, { method: "POST", body: fd });
+    if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+    return (await r.json()) as { ok: boolean; manifest: any; restored_to: string };
+  },
 };
