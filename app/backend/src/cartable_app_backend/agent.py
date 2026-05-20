@@ -1,4 +1,4 @@
-"""Claude Agent SDK chat — loads the pronote skill and streams answers."""
+"""Claude Agent SDK chat — loads the cartable skill and streams answers."""
 
 from __future__ import annotations
 
@@ -136,10 +136,10 @@ def _safe_repr(value: Any) -> str:
 def make_options(session_id: str | None) -> sdk.ClaudeAgentOptions:
     return sdk.ClaudeAgentOptions(
         cwd=str(CARTABLE_DIR),
-        # The pronote skill tells the model exactly which Bash/Read commands
+        # The cartable skill tells the model exactly which Bash/Read commands
         # are useful, so we authorise those tools broadly.
         allowed_tools=["Bash", "Read", "Glob", "Grep"],
-        skills=["pronote"],
+        skills=["cartable"],
         setting_sources=["user"],
         permission_mode="bypassPermissions",
         max_turns=8,

@@ -11,10 +11,10 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
-from . import agent, calendar_sync, db
+from . import agent, bulletin_html, calendar_sync, db
 
 log = logging.getLogger("cartable_app")
 app = FastAPI(title="Cartable", version="0.1.0")
@@ -154,6 +154,27 @@ async def chat(req: ChatRequest) -> StreamingResponse:
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.get("/api/bulletins")
+def bulletins() -> list[dict]:
+    return db.bulletins()
+
+
+@app.get("/api/bulletins/{period_id}")
+def bulletin_json(period_id: str) -> dict:
+    b = db.bulletin(period_id)
+    if b is None:
+        raise HTTPException(404, f"No bulletin for period {period_id}")
+    return b
+
+
+@app.get("/api/bulletins/{period_id}/html", response_class=HTMLResponse)
+def bulletin_render(period_id: str) -> HTMLResponse:
+    b = db.bulletin(period_id)
+    if b is None:
+        raise HTTPException(404, f"No bulletin for period {period_id}")
+    return HTMLResponse(bulletin_html.render(b))
 
 
 @app.get("/api/calendar/status")

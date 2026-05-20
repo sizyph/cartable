@@ -22,6 +22,7 @@ export function GradesDashboard() {
   const averages = useQuery({ queryKey: ["averages"], queryFn: () => api.averages() });
   const recent = useQuery({ queryKey: ["grades", "recent"], queryFn: () => api.gradesRecent(30) });
   const trend = useQuery({ queryKey: ["trend"], queryFn: api.trend });
+  const bulletins = useQuery({ queryKey: ["bulletins"], queryFn: api.bulletins });
 
   const current = periods.data?.find((p) => p.is_current === 1);
 
@@ -51,6 +52,10 @@ export function GradesDashboard() {
           {recent.data ? <RecentGrades data={recent.data} /> : <Skel />}
         </Card>
       </section>
+
+      <Card title="Bulletins de notes" subtitle="Published report cards — click to print or save as PDF">
+        {bulletins.data ? <BulletinsList data={bulletins.data} /> : <Skel />}
+      </Card>
     </div>
   );
 }
@@ -255,6 +260,53 @@ function RecentGrades({ data }: { data: Grade[] }) {
     </ul>
   );
 }
+
+function BulletinsList({
+  data,
+}: {
+  data: { period_id: string; period_name: string; start_date: string | null; end_date: string | null; global_comments: string[] }[];
+}) {
+  if (data.length === 0) {
+    return (
+      <p className="text-sm text-pap-muted italic">
+        No published bulletin yet for any synced period. They appear here once teachers finalise comments and averages.
+      </p>
+    );
+  }
+  return (
+    <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {data.map((b) => (
+        <li
+          key={b.period_id}
+          className="rounded-md border border-pap-border bg-pap-surface-2 p-3 flex flex-col gap-2"
+        >
+          <div>
+            <div className="text-sm font-semibold">{b.period_name}</div>
+            {b.start_date && b.end_date && (
+              <div className="text-xs text-pap-muted">
+                {b.start_date.slice(0, 10)} → {b.end_date.slice(0, 10)}
+              </div>
+            )}
+          </div>
+          {b.global_comments?.[0] && (
+            <p className="text-xs text-pap-muted line-clamp-3 italic">
+              {b.global_comments[0]}
+            </p>
+          )}
+          <a
+            href={api.bulletinHtmlUrl(b.period_id)}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-auto self-start text-xs px-3 py-1 rounded bg-pap-accent text-pap-bg font-medium hover:bg-pap-accent/85"
+          >
+            Open / Print PDF
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 
 function shorten(name: string | null): string {
   if (!name) return "—";

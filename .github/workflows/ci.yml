@@ -20,10 +20,11 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Cartable CLI imports cleanly
+      - name: pronote-cli imports cleanly
         run: |
           uv sync
-          uv run python -c "import cartable, cartable.cli, cartable.client, cartable.config, cartable.db, cartable.sync; print('ok')"
+          uv run python -c "import pronote_cli, pronote_cli.cli, pronote_cli.client, pronote_cli.config, pronote_cli.db, pronote_cli.sync; print('ok')"
+          uv run cartable --help > /dev/null
 
       - name: cartable-app-backend imports cleanly
         working-directory: app/backend

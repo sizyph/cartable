@@ -36,6 +36,7 @@ class SyncCounts:
     punishments: int = 0
     evaluations: int = 0
     information: int = 0
+    bulletins: int = 0
 
     def as_dict(self) -> dict[str, int]:
         return {k: getattr(self, k) for k in self.__annotations__}
@@ -57,6 +58,7 @@ def run(cfg: Config) -> SyncCounts:
                 "periods", "teachers", "grades", "averages",
                 "homework", "lessons", "absences", "punishments",
                 "evaluations", "information",
+                "bulletin_reports", "bulletin_subjects",
             ):
                 conn.execute(f"DELETE FROM {table}")
             _sync_student_info(conn, client)
@@ -67,6 +69,7 @@ def run(cfg: Config) -> SyncCounts:
             _sync_homework(conn, client, counts)
             _sync_lessons(conn, client, counts)
             _sync_information(conn, client, counts)
+            _sync_bulletins(conn, client, counts)
         _log_sync(conn, started_at, success=True, counts=counts.as_dict(), error=None)
         return counts
     except Exception as exc:
@@ -423,6 +426,48 @@ def _sync_information(conn: sqlite3.Connection, client: pronotepy.Client, counts
         for i in items
     ]
     counts.information = _upsert(conn, "information", rows)
+
+
+def _sync_bulletins(conn: sqlite3.Connection, client: pronotepy.Client, counts: SyncCounts) -> None:
+    """Pull period.report for each period that has a published bulletin.
+
+    Pronote publishes bulletins per period (trimestre/semestre) once teachers
+    have finalised comments and averages. `period.report` is None when the
+    bulletin isn't out yet — we just skip those periods quietly.
+    """
+    now = _now_iso()
+    report_rows: list[dict] = []
+    subject_rows: list[dict] = []
+    for period in client.periods:
+        try:
+            report = period.report
+        except Exception as exc:  # noqa: BLE001
+            log.debug("period %s report unavailable: %s", period.name, exc)
+            continue
+        if report is None:
+            continue
+        report_rows.append({
+            "period_id": period.id,
+            "period_name": period.name,
+            "global_comments": json.dumps(list(report.comments or [])),
+            "updated_at": now,
+        })
+        for s in _safe_iter(lambda: report.subjects, f"period {period.name} report.subjects"):
+            subject_rows.append({
+                "period_id": period.id,
+                "subject_name": s.name,
+                "student_average": s.student_average,
+                "class_average": s.class_average,
+                "min_average": s.min_average,
+                "max_average": s.max_average,
+                "coefficient": _safe_float(s.coefficient),
+                "teachers": json.dumps(list(s.teachers or [])),
+                "comments": json.dumps(list(s.comments or [])),
+                "updated_at": now,
+            })
+    _upsert(conn, "bulletin_reports", report_rows, pk="period_id")
+    _upsert(conn, "bulletin_subjects", subject_rows, pk=("period_id", "subject_name"))
+    counts.bulletins = len(report_rows)
 
 
 # ---------- tiny coercion helpers -------------------------------------------

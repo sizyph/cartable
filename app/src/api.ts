@@ -138,6 +138,16 @@ export const api = {
     return get<Homework[]>(`/api/homework${p.toString() ? `?${p}` : ""}`);
   },
   triggerSync: () => post<{ started: boolean; detail: string }>("/api/sync"),
+  bulletins: () =>
+    get<Array<{
+      period_id: string;
+      period_name: string;
+      start_date: string | null;
+      end_date: string | null;
+      global_comments: string[];
+    }>>("/api/bulletins"),
+  bulletinHtmlUrl: (periodId: string) =>
+    `${base}/api/bulletins/${encodeURIComponent(periodId)}/html`,
   calendarStatus: () =>
     get<{
       has_credentials: boolean;

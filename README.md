@@ -8,8 +8,8 @@ Nothing leaves your machine. Pronote is read-only from this codebase's perspecti
 
 ```
 .
-├── src/cartable/                 # Python CLI: cartable sync | status | login-test | …
-├── skill/pronote/                # "pronote" Claude skill (DB schema + query recipes)
+├── src/pronote_cli/              # `pronote-cli` Python pkg, CLI binary: `cartable sync | status | …`
+├── skill/cartable/               # "cartable" Claude skill (DB schema + query recipes)
 ├── launchd/                      # macOS launchd plist for periodic sync
 ├── app/                          # Cartable.app — Tauri 2 + React + Python sidecar
 │   ├── src-tauri/                # Rust shell that spawns the backend on launch
@@ -20,7 +20,7 @@ Nothing leaves your machine. Pronote is read-only from this codebase's perspecti
 
 ## Components
 
-### Cartable CLI (`src/cartable/`)
+### `pronote-cli` Python CLI (`src/pronote_cli/`, binary: `cartable`)
 
 A thin wrapper around [`pronotepy`](https://github.com/bain3/pronotepy) that handles the parent-account quirks and stores a deterministic snapshot in `data/pronote.db`.
 
@@ -47,7 +47,7 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.user.cartable.sync.p
 Drop-in skill for Claude Code that documents the SQLite schema and exposes useful query recipes. Install once:
 
 ```bash
-ln -s "$PWD/skill/pronote" ~/.claude/skills/pronote
+ln -s "$PWD/skill/cartable" ~/.claude/skills/cartable
 ```
 
 ### Cartable.app (`app/`)

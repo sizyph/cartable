@@ -2,10 +2,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import clsx from "clsx";
 
-type View = "schedule" | "grades" | "chat";
+type View = "schedule" | "homework" | "grades" | "chat";
 
 const tabs: { id: View; label: string; hint: string }[] = [
-  { id: "schedule", label: "Schedule", hint: "Lessons & homework" },
+  { id: "schedule", label: "Schedule", hint: "Lessons & exams" },
+  { id: "homework", label: "Homework", hint: "Devoirs to do" },
   { id: "grades", label: "Grades", hint: "Notes & moyennes" },
   { id: "chat", label: "Chat", hint: "Ask Claude about school" },
 ];

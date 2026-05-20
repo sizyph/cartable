@@ -26,6 +26,7 @@ export function ChatPanel() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [streaming, setStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -115,7 +116,7 @@ export function ChatPanel() {
       <header className="px-8 py-5 border-b border-pap-border">
         <h1 className="text-2xl font-semibold tracking-tight">Chat</h1>
         <p className="text-sm text-pap-muted">
-          Ask Claude about the school data. The pronote skill is loaded.
+          Ask Claude about the school data. The cartable skill is loaded.
           {sessionId && <span className="ml-2 opacity-60">session #{sessionId.slice(0, 8)}</span>}
         </p>
       </header>
@@ -155,7 +156,14 @@ export function ChatPanel() {
             onChange={(e) => setInput(e.target.value)}
             placeholder={streaming ? "Claude is thinking…" : "Ask about grades, schedule, teachers…"}
             disabled={streaming}
+            ref={inputRef}
             className="flex-1 bg-pap-surface border border-pap-border rounded-md px-3 py-2 text-sm placeholder-pap-muted focus:outline-none focus:border-pap-accent disabled:opacity-50"
+          />
+          <MicButton
+            disabled={streaming}
+            onActivate={() => {
+              inputRef.current?.focus();
+            }}
           />
           <button
             type="submit"
@@ -169,6 +177,40 @@ export function ChatPanel() {
     </div>
   );
 }
+
+/**
+ * Microphone button — Tauri's WKWebView does NOT expose the Web Speech API
+ * (SpeechRecognition is unimplemented on macOS WebKit). So we don't try to
+ * record/transcribe ourselves. Instead, we focus the input field and offer
+ * a one-line hint: any system-wide dictation tool — Superwhisper, Whisper
+ * Flow, macOS Voice Control / Dictation — works as long as the input has
+ * keyboard focus.
+ */
+function MicButton({ disabled, onActivate }: { disabled?: boolean; onActivate: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onActivate}
+      disabled={disabled}
+      title={
+        "Focus the input, then start your dictation tool:\n" +
+        "  • Superwhisper / Whisper Flow — your configured hotkey\n" +
+        "  • macOS — System Settings → Keyboard → Dictation, then press the hotkey (default: press Fn twice)\n" +
+        "Anything typed by your dictation tool will land here."
+      }
+      aria-label="Voice input — focus chat for dictation"
+      className="px-3 py-2 rounded-md bg-pap-surface border border-pap-border text-pap-muted hover:text-pap-text hover:bg-pap-surface-2 disabled:opacity-40"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <rect x="9" y="2" width="6" height="12" rx="3" />
+        <path d="M5 10v1a7 7 0 0 0 14 0v-1" />
+        <line x1="12" y1="18" x2="12" y2="22" />
+        <line x1="8" y1="22" x2="16" y2="22" />
+      </svg>
+    </button>
+  );
+}
+
 
 function Bubble({ msg }: { msg: ChatMessage }) {
   if (msg.role === "user") {

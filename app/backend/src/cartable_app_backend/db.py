@@ -159,6 +159,63 @@ def teachers() -> list[dict[str, Any]]:
     return rows
 
 
+def bulletins() -> list[dict[str, Any]]:
+    """List periods that have a published bulletin."""
+    with connect() as c:
+        rows = rows_to_dicts(c.execute(
+            "SELECT b.period_id, b.period_name, b.global_comments, p.start_date, p.end_date "
+            "FROM bulletin_reports b "
+            "LEFT JOIN periods p ON p.id = b.period_id "
+            "ORDER BY p.start_date, b.period_name"
+        ).fetchall())
+    for r in rows:
+        try:
+            r["global_comments"] = json.loads(r["global_comments"] or "[]")
+        except json.JSONDecodeError:
+            r["global_comments"] = []
+    return rows
+
+
+def bulletin(period_id: str) -> dict[str, Any] | None:
+    """Full bulletin payload: global comments + subject rows + student header."""
+    with connect() as c:
+        head_row = c.execute(
+            "SELECT b.period_id, b.period_name, b.global_comments, "
+            "       p.start_date, p.end_date, "
+            "       (SELECT value FROM student_info WHERE key='name') AS student_name, "
+            "       (SELECT value FROM student_info WHERE key='class_name') AS class_name, "
+            "       (SELECT value FROM student_info WHERE key='establishment') AS establishment "
+            "FROM bulletin_reports b "
+            "LEFT JOIN periods p ON p.id = b.period_id "
+            "WHERE b.period_id = ?",
+            (period_id,),
+        ).fetchone()
+        if not head_row:
+            return None
+        subs = rows_to_dicts(c.execute(
+            "SELECT subject_name, student_average, class_average, "
+            "       min_average, max_average, coefficient, teachers, comments "
+            "FROM bulletin_subjects WHERE period_id = ? ORDER BY subject_name",
+            (period_id,),
+        ).fetchall())
+    head = dict(head_row)
+    try:
+        head["global_comments"] = json.loads(head["global_comments"] or "[]")
+    except json.JSONDecodeError:
+        head["global_comments"] = []
+    for s in subs:
+        try:
+            s["teachers"] = json.loads(s["teachers"] or "[]")
+        except json.JSONDecodeError:
+            s["teachers"] = []
+        try:
+            s["comments"] = json.loads(s["comments"] or "[]")
+        except json.JSONDecodeError:
+            s["comments"] = []
+    head["subjects"] = subs
+    return head
+
+
 def last_sync() -> dict[str, Any] | None:
     with connect() as c:
         row = c.execute(

@@ -149,6 +149,28 @@ CREATE TABLE IF NOT EXISTS information (
     updated_at    TEXT NOT NULL
 );
 
+-- Published bulletins (one row per period that has a finalised report).
+CREATE TABLE IF NOT EXISTS bulletin_reports (
+    period_id       TEXT PRIMARY KEY,
+    period_name     TEXT NOT NULL,
+    global_comments TEXT,  -- JSON array of strings
+    updated_at      TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS bulletin_subjects (
+    period_id       TEXT NOT NULL,
+    subject_name    TEXT NOT NULL,
+    student_average TEXT,  -- text because Pronote uses "11,05" etc.
+    class_average   TEXT,
+    min_average     TEXT,
+    max_average     TEXT,
+    coefficient     REAL,
+    teachers        TEXT,  -- JSON array of strings
+    comments        TEXT,  -- JSON array of strings (one per teacher comment)
+    updated_at      TEXT NOT NULL,
+    PRIMARY KEY (period_id, subject_name)
+);
+
 CREATE TABLE IF NOT EXISTS sync_log (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     started_at  TEXT NOT NULL,
