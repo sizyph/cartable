@@ -97,24 +97,38 @@ jobs:
           codesign --force --deep --sign - "$APP"
           codesign --verify --deep --strict --verbose=2 "$APP"
 
-      # ---- DMG with proper drag-and-drop layout via create-dmg ------------
-      - name: Build DMG (create-dmg, drag-and-drop layout)
+      # ---- DMG with proper drag-and-drop layout ---------------------------
+      #
+      # We use `create-dmg` from Homebrew (the andreyvit/create-dmg bash
+      # script — NOT the sindresorhus npm package, which insists on a real
+      # Apple Developer ID and bails out on CI). The Homebrew one happily
+      # builds unsigned DMGs and accepts explicit icon positions for the
+      # classic "drag the app onto Applications" layout.
+      - name: Install create-dmg (Homebrew)
+        run: brew install create-dmg
+
+      - name: Build DMG (drag-and-drop layout)
         run: |
+          set -e
           APP=app/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Cartable.app
           OUT_DMG="Cartable-${{ github.ref_name }}-arm64.dmg"
 
-          # `create-dmg` is sindresorhus's npm CLI — produces the classic
-          # window with the .app on the left and an Applications symlink
-          # on the right, ready to drag.
-          npm install --no-save create-dmg
-          npx create-dmg --overwrite --identity= "$APP" .
+          # create-dmg refuses to overwrite — clean any prior leftover.
+          rm -f "$OUT_DMG"
 
-          # create-dmg names the output "<Name> <Version>.dmg"; normalise it.
-          shopt -s nullglob
-          for f in Cartable*.dmg; do
-            mv "$f" "$OUT_DMG"
-            break
-          done
+          create-dmg \
+            --volname "Cartable" \
+            --volicon "app/src-tauri/icons/icon.icns" \
+            --window-pos 200 120 \
+            --window-size 660 400 \
+            --icon-size 110 \
+            --icon "Cartable.app" 165 180 \
+            --hide-extension "Cartable.app" \
+            --app-drop-link 495 180 \
+            --no-internet-enable \
+            "$OUT_DMG" \
+            "$APP"
+
           ls -lh "$OUT_DMG"
 
       # ---- collect artefacts ---------------------------------------------
