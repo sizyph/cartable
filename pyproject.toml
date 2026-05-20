@@ -1,0 +1,33 @@
+[project]
+name = "cartable"
+version = "0.1.0"
+description = "Local sync of Pronote data (grades, homework, lessons, teachers, absences) into SQLite, plus a Claude skill for querying it."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Sizyph" }]
+requires-python = ">=3.10"
+keywords = ["pronote", "school", "sqlite", "claude", "claude-code"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Education",
+]
+dependencies = [
+    "pronotepy>=2.14.6",
+    "python-dotenv>=1.2.2",
+]
+
+[project.scripts]
+cartable = "cartable.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Sizyph/cartable"
+Issues = "https://github.com/Sizyph/cartable/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cartable"]

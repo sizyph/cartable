@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pap-bg: #0e1015;
+  --color-pap-surface: #161922;
+  --color-pap-surface-2: #1f2330;
+  --color-pap-border: #2a2f40;
+  --color-pap-text: #e6e8ee;
+  --color-pap-muted: #8e94a7;
+  --color-pap-accent: #7c9cff;
+  --color-pap-good: #6bd09c;
+  --color-pap-warn: #f0b86e;
+  --color-pap-bad: #ef6f6c;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: var(--color-pap-bg);
+  color: var(--color-pap-text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+    "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+}
+
+* {
+  box-sizing: border-box;
+}

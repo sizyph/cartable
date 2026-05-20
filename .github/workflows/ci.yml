@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python (cartable CLI + backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Cartable CLI imports cleanly
+        run: |
+          uv sync
+          uv run python -c "import cartable, cartable.cli, cartable.client, cartable.config, cartable.db, cartable.sync; print('ok')"
+
+      - name: cartable-app-backend imports cleanly
+        working-directory: app/backend
+        run: |
+          uv sync
+          uv run python -c "import cartable_app_backend.server; import cartable_app_backend.agent; import cartable_app_backend.calendar_sync; import cartable_app_backend.db; print('ok')"
+
+  frontend:
+    name: Frontend (typecheck + vite build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - run: npm ci
+
+      - name: TypeScript + Vite build
+        run: npm run build
+
+  rust:
+    name: Rust (cargo check)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: app/src-tauri
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+
+      # tauri-build expects ../dist (frontendDist). We don't need a real build
+      # here, just something the build script can stat.
+      - name: Stub frontend dist
+        working-directory: app
+        run: mkdir -p dist && echo '<!doctype html><title>stub</title>' > dist/index.html
+
+      # tauri-build also expects an externalBin file matching the platform
+      # triple. Stub it so cargo check doesn't fail.
+      - name: Stub sidecar binary
+        working-directory: app/src-tauri
+        run: |
+          mkdir -p binaries
+          touch binaries/cartable-app-backend-aarch64-apple-darwin
+          chmod +x binaries/cartable-app-backend-aarch64-apple-darwin
+
+      - run: cargo check --all-targets

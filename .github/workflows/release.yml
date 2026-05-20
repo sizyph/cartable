@@ -1,0 +1,125 @@
+name: Release Cartable.app
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag name to publish under (only for manual runs)"
+        required: true
+        default: "v0.0.0-manual"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build macOS (arm64) bundle
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---- toolchains -------------------------------------------------------
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+
+      # ---- backend: pyinstaller single-file binary --------------------------
+      - name: Sync backend deps
+        working-directory: app/backend
+        run: uv sync
+
+      - name: Build cartable-app-backend (PyInstaller)
+        working-directory: app/backend
+        run: |
+          uv run pyinstaller \
+            --onefile --noconfirm \
+            --name cartable-app-backend-aarch64-apple-darwin \
+            --collect-all uvicorn \
+            --collect-all fastapi \
+            --collect-all pydantic \
+            --collect-all pydantic_core \
+            --collect-all starlette \
+            --collect-all anyio \
+            --collect-all watchfiles \
+            --collect-all httptools \
+            --collect-all uvloop \
+            --collect-all websockets \
+            --collect-all google \
+            --collect-all googleapiclient \
+            --collect-all google_auth_oauthlib \
+            --collect-all claude_agent_sdk \
+            --collect-submodules cartable_app_backend \
+            src/cartable_app_backend/__main__.py
+          mkdir -p ../src-tauri/binaries
+          cp dist/cartable-app-backend-aarch64-apple-darwin ../src-tauri/binaries/
+
+      # ---- frontend ---------------------------------------------------------
+      - name: Install frontend deps
+        working-directory: app
+        run: npm ci
+
+      # ---- tauri build (.app + .dmg) ---------------------------------------
+      - name: Build Cartable.app + DMG
+        working-directory: app
+        run: npm run tauri build -- --target aarch64-apple-darwin --bundles app,dmg
+
+      # ---- collect artefacts -----------------------------------------------
+      - name: Stage release assets
+        id: stage
+        run: |
+          set -e
+          BUNDLE_DIR=app/src-tauri/target/aarch64-apple-darwin/release/bundle
+          # Fallback if user runs without --target (older Tauri layouts):
+          [ -d "$BUNDLE_DIR" ] || BUNDLE_DIR=app/src-tauri/target/release/bundle
+
+          mkdir -p out
+          # Zipped .app
+          if [ -d "$BUNDLE_DIR/macos/Cartable.app" ]; then
+            ( cd "$BUNDLE_DIR/macos" && zip -ryq "$GITHUB_WORKSPACE/out/Cartable-${{ github.ref_name }}-arm64.app.zip" Cartable.app )
+          fi
+          # DMG
+          if [ -d "$BUNDLE_DIR/dmg" ]; then
+            for f in "$BUNDLE_DIR"/dmg/*.dmg; do
+              cp "$f" "out/Cartable-${{ github.ref_name }}-arm64.dmg"
+              break
+            done
+          fi
+          ls -la out
+          echo "asset_dir=out" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cartable-macos-arm64
+          path: ${{ steps.stage.outputs.asset_dir }}/*
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.stage.outputs.asset_dir }}/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          body: |
+            **Cartable.app for macOS (Apple Silicon).**
+
+            ⚠️ Unsigned. macOS Gatekeeper will block the first launch — right-click → Open,
+            or run `xattr -d com.apple.quarantine Cartable.app`.

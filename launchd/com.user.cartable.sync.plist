@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd template — refresh cartable's local Pronote mirror every 30 minutes.
+
+  This file is a TEMPLATE. macOS launchd does not expand environment variables
+  in <string> fields, so the HOME path must be hard-coded before installation.
+
+  To install:
+
+      ENV='s|__HOME__|'"$HOME"'|g'
+      sed -e "$ENV" launchd/com.user.cartable.sync.plist \
+          > ~/Library/LaunchAgents/com.user.cartable.sync.plist
+      launchctl bootstrap gui/$(id -u) \
+          ~/Library/LaunchAgents/com.user.cartable.sync.plist
+
+  Then verify with: launchctl list | grep cartable
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.cartable.sync</string>
+
+    <!-- Login shell so PATH (Homebrew, uv, pyenv) is loaded. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/zsh</string>
+        <string>-lc</string>
+        <string>cd "__HOME__/Documents/Claude/cartable" &amp;&amp; /opt/homebrew/bin/uv run cartable sync</string>
+    </array>
+
+    <!-- Every 30 minutes. Pronote rate-limits clients; don't go lower. -->
+    <key>StartInterval</key>
+    <integer>1800</integer>
+
+    <!-- Also run once shortly after login so data is fresh on first open. -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>__HOME__/Documents/Claude/cartable/data/launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Documents/Claude/cartable/data/launchd.log</string>
+
+    <key>Nice</key>
+    <integer>5</integer>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
