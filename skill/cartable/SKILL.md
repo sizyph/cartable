@@ -1,18 +1,20 @@
 ---
-name: pronote
-description: Coach a student using their live Pronote data — grades, homework, lessons, teachers, absences. Use whenever the user asks about a student's school work, upcoming devoirs, recent marks, who their teachers are, scheduling study time, or whether to contact a teacher. Reads a local SQLite database synced from Pronote; can also trigger a fresh sync.
+name: cartable
+description: Coach a student using their live Pronote data plus a local library of textbooks/references — grades, homework, lessons, teachers, absences, published bulletins, reading list. Use whenever the user asks about a student's school work, upcoming devoirs, recent marks, who their teachers are, scheduling study time, looking up a chapter in a textbook, or whether to contact a teacher. Reads a local SQLite database synced from Pronote; can trigger a fresh sync; can open the textbooks the user has registered.
 ---
 
-# Pronote — local school data
+# Cartable — local school data
 
 ## What this skill is for
 
-You have read-only access to a local SQLite database synced from Pronote (a student's school account). Use it to:
+You have read-only access to a local SQLite database synced from Pronote (a student's school account) plus a small filesystem-backed library of textbooks and references the user has registered. Use them to:
 
 - Summarise recent marks, spot a downward trend, compute weighted averages by subject/period.
 - List upcoming homework and tests; help plan study sessions.
 - Look up a teacher's name when the user considers reaching out.
 - Flag absences or punishments that might warrant a parent–teacher conversation.
+- Quote teacher comments and class averages from published bulletins.
+- Point the user at the right textbook chapter or reference for a topic that came up in a grade or homework.
 
 The database lives at `~/Documents/Claude/cartable/data/pronote.db` by default. A launchd job refreshes it on a schedule; you can also force a refresh.
 
@@ -29,9 +31,13 @@ cd ~/Documents/Claude/cartable && uv run cartable status
 sqlite3 ~/Documents/Claude/cartable/data/pronote.db "SELECT …"
 ```
 
-Always run a fresh `cartable sync` *before* answering if `cartable status` shows the last successful sync is older than ~1 hour, or if the user explicitly asks for the latest data.
+`cartable status` shows the last sync; if it's older than ~1 hour or failed, run `cartable sync` before answering "what's new" questions.
 
-## Schema (the only tables that exist)
+Many of the same query endpoints are also exposed over HTTP on `127.0.0.1:7531` while the Cartable.app is running — discoverable via `curl -s http://127.0.0.1:7531/openapi.json | jq .paths`. Prefer direct SQL though; the HTTP API matches what the Mac app shows but is less flexible.
+
+## Schema
+
+Pronote-synced tables (refreshed each sync — **do not write to these**):
 
 - **student_info**(key, value) — name, class_name, establishment, email, phone, address, ine_number, delegue.
 - **periods**(id, name, start_date, end_date, overall_average, class_overall_average, is_current).
@@ -44,14 +50,38 @@ Always run a fresh `cartable sync` *before* answering if `cartable status` shows
 - **punishments**(id, period_id, nature, reasons, giver, given_at, duration, exclusion, during_lesson).
 - **evaluations**(id, period_id, name, description, subject_name, domain, teacher, coefficient, date, acquisitions_json).
 - **information**(id, title, author, category, content, creation_date, start_date, end_date, read).
-- **sync_log**(id, started_at, finished_at, success, error, counts_json).
 
-Dates are ISO strings ("2026-05-19" / "2026-05-19T08:00:00"). `is_*` / `done` / `success` / `canceled` columns are 0/1 integers.
+Bulletins (published trimesters/semesters with teacher comments and per-subject averages):
+
+- **bulletin_reports**(period_id, period_name, global_comments, updated_at) — `global_comments` is a JSON array of strings (general teacher / head-of-class appreciation).
+- **bulletin_subjects**(period_id, subject_name, student_average, class_average, min_average, max_average, coefficient, teachers, comments, updated_at) — averages are TEXT ("11,05"), `teachers` and `comments` are JSON arrays.
+
+User-managed library (preserved across syncs):
+
+- **library_items**(id, title, author, subject, kind, url, file_path, notes, cover_url, added_at, updated_at) — `kind` is one of `textbook`, `companion`, `reference`. `url` opens in the system browser; `file_path` is relative to `~/Documents/Claude/cartable/data/library/` and opens as a local PDF/EPUB.
+
+Plumbing tables:
+
+- **sync_log**(id, started_at, finished_at, success, error, counts_json) — last sync history.
+- **schema_meta**(key, value) — schema version.
+
+Dates are ISO strings (`2026-05-19` / `2026-05-19T08:00:00`). `is_*` / `done` / `success` / `canceled` columns are 0/1 integers.
+
+## Other places Cartable stores data
+
+- `~/Documents/Claude/cartable/data/pronote.db` — the SQLite above.
+- `~/Documents/Claude/cartable/data/library/` — drop-zone for PDFs/EPUBs. Anything in there shows up in the Mac app's Library tab even without an entry in `library_items`. Read files freely; never delete user content here.
+- `~/Documents/Claude/cartable/data/launchd.log` — auto-sync log; tail it when investigating why a scheduled sync failed.
+- `~/Library/Application Support/Cartable/google_credentials.json` — OAuth client secrets for Google Calendar + Drive. **Sensitive — never read or echo.**
+- `~/Library/Application Support/Cartable/google_token.json` — OAuth refresh token. **Sensitive — never read or echo.**
+- `~/Library/Application Support/Cartable/drive_config.json` — `{root_folder_id, root_folder_name}` for the Drive integration.
+- `~/Library/Logs/Cartable/backend.log` — Mac app's Python backend log; useful when an app feature breaks.
+- `~/Documents/Claude/cartable/.env` — Pronote credentials. **Sensitive — never read or echo.**
 
 ## Useful query recipes
 
 ```sql
--- Subject averages this period, sorted from weakest to strongest
+-- Subject averages this period, weakest first
 SELECT subject_name, student, class_average, out_of
 FROM averages
 WHERE period_id = (SELECT id FROM periods WHERE is_current = 1)
@@ -65,8 +95,7 @@ ORDER BY date DESC LIMIT 10;
 -- Trend in a subject across periods (e.g. MATHÉMATIQUES)
 SELECT period_name, AVG(CAST(REPLACE(grade, ',', '.') AS REAL) * 20.0 / out_of) AS normalised_avg
 FROM grades
-WHERE subject_name = 'MATHÉMATIQUES'
-  AND grade GLOB '[0-9]*'
+WHERE subject_name = 'MATHÉMATIQUES' AND grade GLOB '[0-9]*'
 GROUP BY period_id, period_name
 ORDER BY MIN(date);
 
@@ -97,20 +126,37 @@ SELECT from_date, to_date, hours, reasons
 FROM absences
 WHERE justified = 0
   AND period_id = (SELECT id FROM periods WHERE is_current = 1);
+
+-- Pull a published bulletin (global appreciation + subject comments)
+SELECT br.period_name, br.global_comments,
+       bs.subject_name, bs.student_average, bs.class_average, bs.comments
+FROM bulletin_reports br
+LEFT JOIN bulletin_subjects bs ON bs.period_id = br.period_id
+WHERE br.period_name = 'Trimestre 2'
+ORDER BY bs.subject_name;
+
+-- Library: every textbook the user has registered for maths
+SELECT title, author, kind, url, file_path
+FROM library_items
+WHERE subject = 'MATHEMATIQUES' OR title LIKE '%math%'
+ORDER BY kind, title;
 ```
 
 ## How to answer well
 
-1. **Be specific and quantitative.** Quote exact grades, dates, and weights. Don't say "you're doing OK in maths" — say "the maths average is 14.2/20 (class 12.8), up from 13.1 last trimestre, with coefficient-2 grades on 2025-04-12 (16) and 2025-05-03 (12)."
-2. **Surface what changed.** When summarising, prioritise (a) grades from the last 14 days, (b) tests in the next 14 days, (c) overdue homework.
-3. **Recommend, don't dictate.** When proposing to contact a teacher, draft a short message the user can review, and explain *why* (which grade, which date, what the comment said).
-4. **Trigger thresholds for parent action** (use as guidance, not strict rules):
+1. **Be specific and quantitative.** Quote exact grades, dates, and weights. Don't say "you're doing OK in maths" — say "the maths average is 14.2/20 (class 12.8), up from 13.1 last trimestre, with coefficient-2 grades on 2026-04-12 (16) and 2026-05-03 (12)."
+2. **Surface what changed.** When summarising, prioritise (a) grades from the last 14 days, (b) tests in the next 14 days, (c) overdue homework, (d) new bulletins.
+3. **Bridge to the library.** When a topic comes up (e.g. a grade in physics, or a tough chapter in maths), check `library_items` for a relevant textbook or companion and surface it — "your Bordas Maths 1ère, page X" — rather than just analysing the number.
+4. **Recommend, don't dictate.** When proposing to contact a teacher, draft a short message the user can review, and explain *why* (which grade, which date, what the comment in the bulletin said).
+5. **Trigger thresholds for parent action** (guidance, not strict rules):
    - A subject average drops by ≥ 2 points across two consecutive periods.
    - A single grade ≤ 8/20 in a coefficient-≥ 2 evaluation.
    - ≥ 2 unjustified absences in a 30-day window.
    - A "punishments" row that mentions exclusion.
-   When any of these triggers fire, surface the issue and propose a concrete next step (e.g. "draft a message to the maths teacher — here's the relevant grade").
-5. **Don't fabricate.** If a question can't be answered from the DB (e.g. teacher email — Pronote rarely exposes it via the parent account), say so and suggest a path (Pronote messaging, school directory).
+   - A bulletin global comment containing language like "fragile", "en difficulté", "préoccupant".
+   When any of these fire, surface the issue and propose a concrete next step (e.g. "draft a message to the maths teacher — here's the bulletin comment that prompted this").
+6. **Don't fabricate.** If a question can't be answered from the DB (e.g. teacher email — Pronote rarely exposes it via the parent account), say so and suggest a path (Pronote messaging, school directory).
+7. **Treat secrets as off-limits.** Never read or echo `.env`, `google_credentials.json`, `google_token.json`, or the rotating `data/token.json`. They contain credentials.
 
 ## Sync staleness
 

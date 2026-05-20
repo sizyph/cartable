@@ -62,10 +62,12 @@ jobs:
             --collect-all httptools \
             --collect-all uvloop \
             --collect-all websockets \
+            --collect-all multipart \
             --collect-all google \
             --collect-all googleapiclient \
             --collect-all google_auth_oauthlib \
             --collect-all claude_agent_sdk \
+            --collect-all pronotepy \
             --collect-submodules cartable_app_backend \
             src/cartable_app_backend/__main__.py
           mkdir -p ../src-tauri/binaries
@@ -76,32 +78,54 @@ jobs:
         working-directory: app
         run: npm ci
 
-      # ---- tauri build (.app + .dmg) ---------------------------------------
-      - name: Build Cartable.app + DMG
+      # ---- tauri build (.app only — DMG is rebuilt below after signing) -----
+      - name: Build Cartable.app
         working-directory: app
-        run: npm run tauri build -- --target aarch64-apple-darwin --bundles app,dmg
+        run: npm run tauri build -- --target aarch64-apple-darwin --bundles app
 
-      # ---- collect artefacts -----------------------------------------------
+      # ---- re-sign the .app properly --------------------------------------
+      #
+      # Tauri's linker only adhoc-signs the main binary; the bundle's
+      # _CodeSignature ends up missing sealed resources, which makes macOS
+      # reject the .app outright ("damaged"). A full deep adhoc sign fixes
+      # this — Gatekeeper still warns on first launch (no Developer ID),
+      # but right-click → Open then works. v0.1.0 shipped without this step
+      # and was un-installable; see commit history for details.
+      - name: Adhoc-sign .app (deep)
+        run: |
+          APP=app/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Cartable.app
+          codesign --force --deep --sign - "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
+      # ---- DMG with proper drag-and-drop layout via create-dmg ------------
+      - name: Build DMG (create-dmg, drag-and-drop layout)
+        run: |
+          APP=app/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Cartable.app
+          OUT_DMG="Cartable-${{ github.ref_name }}-arm64.dmg"
+
+          # `create-dmg` is sindresorhus's npm CLI — produces the classic
+          # window with the .app on the left and an Applications symlink
+          # on the right, ready to drag.
+          npm install --no-save create-dmg
+          npx create-dmg --overwrite --identity= "$APP" .
+
+          # create-dmg names the output "<Name> <Version>.dmg"; normalise it.
+          shopt -s nullglob
+          for f in Cartable*.dmg; do
+            mv "$f" "$OUT_DMG"
+            break
+          done
+          ls -lh "$OUT_DMG"
+
+      # ---- collect artefacts ---------------------------------------------
       - name: Stage release assets
         id: stage
         run: |
           set -e
-          BUNDLE_DIR=app/src-tauri/target/aarch64-apple-darwin/release/bundle
-          # Fallback if user runs without --target (older Tauri layouts):
-          [ -d "$BUNDLE_DIR" ] || BUNDLE_DIR=app/src-tauri/target/release/bundle
-
           mkdir -p out
-          # Zipped .app
-          if [ -d "$BUNDLE_DIR/macos/Cartable.app" ]; then
-            ( cd "$BUNDLE_DIR/macos" && zip -ryq "$GITHUB_WORKSPACE/out/Cartable-${{ github.ref_name }}-arm64.app.zip" Cartable.app )
-          fi
-          # DMG
-          if [ -d "$BUNDLE_DIR/dmg" ]; then
-            for f in "$BUNDLE_DIR"/dmg/*.dmg; do
-              cp "$f" "out/Cartable-${{ github.ref_name }}-arm64.dmg"
-              break
-            done
-          fi
+          APP=app/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Cartable.app
+          ( cd "$(dirname "$APP")" && zip -ryq "$GITHUB_WORKSPACE/out/Cartable-${{ github.ref_name }}-arm64.app.zip" Cartable.app )
+          mv "Cartable-${{ github.ref_name }}-arm64.dmg" out/
           ls -la out
           echo "asset_dir=out" >> "$GITHUB_OUTPUT"
 
@@ -121,5 +145,12 @@ jobs:
           body: |
             **Cartable.app for macOS (Apple Silicon).**
 
-            ⚠️ Unsigned. macOS Gatekeeper will block the first launch — right-click → Open,
-            or run `xattr -d com.apple.quarantine Cartable.app`.
+            Install:
+            1. Download `Cartable-*-arm64.dmg`, double-click to mount.
+            2. Drag **Cartable** onto **Applications**.
+            3. On first launch, macOS Gatekeeper will refuse to open the unsigned app.
+               Right-click → **Open** the first time to bypass, or in Terminal:
+               `xattr -d com.apple.quarantine /Applications/Cartable.app`.
+
+            The bundle is adhoc-signed but not notarised — Cartable doesn't have an
+            Apple Developer ID. Everything runs locally; nothing is sent to Apple.
