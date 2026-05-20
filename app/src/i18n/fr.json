@@ -1,0 +1,221 @@
+{
+  "lang": { "name": "Français" },
+  "nav": {
+    "schedule": "Emploi du temps",
+    "schedule_hint": "Cours & contrôles",
+    "homework": "Devoirs",
+    "homework_hint": "À faire",
+    "grades": "Notes",
+    "grades_hint": "Notes & moyennes",
+    "chat": "Chat",
+    "chat_hint": "Demander à Claude",
+    "settings": "Paramètres",
+    "settings_hint": "Compte, sync, sauvegarde"
+  },
+  "common": {
+    "today": "Aujourd'hui",
+    "tomorrow": "demain",
+    "yesterday": "hier",
+    "in_days_one": "dans {{count}} jour",
+    "in_days_other": "dans {{count}} jours",
+    "days_ago_one": "il y a {{count}} jour",
+    "days_ago_other": "il y a {{count}} jours",
+    "loading": "Chargement…",
+    "back": "Retour",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "connect": "Connecter",
+    "ok": "OK"
+  },
+  "sidebar": {
+    "last_sync_label": "Dernière sync :",
+    "never": "jamais",
+    "sync_now": "Synchroniser",
+    "syncing": "En cours…",
+    "ago_seconds": "il y a {{n}} s",
+    "ago_minutes": "il y a {{n}} min",
+    "ago_hours": "il y a {{n}} h",
+    "ago_days": "il y a {{n}} j"
+  },
+  "schedule": {
+    "title": "Emploi du temps",
+    "week_of": "Semaine du {{date}}",
+    "no_lessons": "pas de cours",
+    "test_tag": "contrôle",
+    "google_calendar_setup_needed": "Google Calendar — configuration unique requise",
+    "google_calendar_setup_intro": "Pour activer la synchronisation des 2 semaines à venir, placez vos identifiants OAuth Desktop Google ici :",
+    "google_calendar_setup_outro": "(Créez un projet sur console.cloud.google.com, activez l'API Calendar, créez un client OAuth 2.0 de type « Desktop », téléchargez le JSON.)",
+    "loading_status": "Chargement du statut Calendar…",
+    "connect_google_calendar": "Connecter Google Calendar",
+    "opening_browser": "Ouverture du navigateur…",
+    "sync_2_weeks": "Synchroniser 2 semaines dans Google Calendar",
+    "syncing_calendar": "Envoi des 2 semaines…"
+  },
+  "homework": {
+    "title": "Devoirs",
+    "window": {
+      "current": "Cette semaine",
+      "next": "Semaine prochaine",
+      "later": "Plus tard",
+      "overdue": "En retard",
+      "current_label": "Semaine du {{date}}",
+      "next_label": "Semaine du {{date}}",
+      "overdue_label": "En retard, toujours à faire",
+      "later_label": "Plus tard ce trimestre"
+    },
+    "pending_of_total": "{{pending}} à faire / {{total}} au total",
+    "items_one": "{{count}} devoir",
+    "items_other": "{{count}} devoirs",
+    "empty": "Rien dans cette période.",
+    "no_description": "(sans description)"
+  },
+  "grades": {
+    "title": "Notes",
+    "current_period": "Période actuelle : {{name}}",
+    "card": {
+      "subject_averages": "Moyennes par matière (période en cours)",
+      "subject_averages_sub": "Élève vs classe",
+      "trend": "Évolution par trimestre",
+      "trend_sub": "Moyenne par matière, normalisée /20",
+      "leaderboard": "Classement par matière",
+      "leaderboard_sub": "Trié par écart avec la classe",
+      "recent_grades": "Notes récentes",
+      "recent_grades_sub": "Les plus récentes en premier, dédupliquées",
+      "bulletins": "Bulletins de notes",
+      "bulletins_sub": "Bulletins publiés — cliquez pour imprimer ou enregistrer en PDF"
+    },
+    "table": {
+      "subject": "Matière",
+      "student": "Élève",
+      "class": "Classe",
+      "gap": "Écart"
+    },
+    "trend_need_2_periods": "Au moins 2 périodes nécessaires pour tracer une évolution.",
+    "no_bulletins": "Aucun bulletin publié pour les périodes synchronisées. Ils apparaissent ici une fois les commentaires et moyennes finalisés par les enseignants.",
+    "open_bulletin": "Ouvrir / Imprimer en PDF"
+  },
+  "chat": {
+    "title": "Chat",
+    "subtitle": "Posez vos questions à Claude sur la scolarité. La compétence cartable est chargée.",
+    "session_id": "session #{{id}}",
+    "try_one": "Essayez l'une de ces questions :",
+    "placeholder": "Notes, emploi du temps, professeurs…",
+    "thinking": "Claude réfléchit…",
+    "send": "Envoyer",
+    "starters": [
+      "Qu'est-ce qui est important aujourd'hui ?",
+      "Comment évoluent les maths ce trimestre par rapport au précédent ?",
+      "Liste les devoirs à rendre dans les 7 prochains jours.",
+      "Y a-t-il un sujet qui mériterait que je contacte un prof ?"
+    ],
+    "voice_button_title": "Cliquez ici pour mettre le focus sur le champ, puis lancez votre outil de dictée :\n  • Superwhisper / Whisper Flow — votre raccourci configuré\n  • macOS — Réglages → Clavier → Dictée, puis votre raccourci (par défaut : Fn deux fois)\nLe texte dicté apparaîtra ici."
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Compte, synchronisation, sauvegarde, version.",
+    "account": {
+      "title": "Compte",
+      "student": "Élève",
+      "pronote_url": "URL Pronote",
+      "username": "Identifiant",
+      "auth_mode": "Mode d'auth",
+      "ent_provider": "Fournisseur ENT",
+      "child": "Enfant",
+      "password": "Mot de passe",
+      "password_stored": "•••••••••• (stocké localement)",
+      "password_not_set": "(non défini)",
+      "edit": "Modifier les identifiants",
+      "logout": "Se déconnecter",
+      "logging_out": "Déconnexion…",
+      "logout_confirm": "Effacer les identifiants Pronote et le jeton d'authentification ? La base de données synchronisée reste intacte.",
+      "form": {
+        "auth_password": "mot de passe (direct)",
+        "auth_ent": "ent (portail école)",
+        "password_placeholder_keep": "•••••• (laisser vide pour garder l'actuel)",
+        "password_placeholder_new": "Saisir le mot de passe",
+        "child_placeholder": "nom exact tel qu'affiché par Pronote",
+        "ent_placeholder": "ac_rennes, ent_hdf, ile_de_france, …"
+      }
+    },
+    "autosync": {
+      "title": "Synchronisation auto",
+      "subtitle": "Une tâche launchd rafraîchit la base locale en arrière-plan.",
+      "running": "Active",
+      "stopped": "Arrêtée",
+      "plist_target": "Plist : {{path}}",
+      "template_missing": "Modèle manquant — réinstallez le projet.",
+      "interval": "Intervalle",
+      "presets": {
+        "15min": "15 min",
+        "30min": "30 min",
+        "1hour": "1 h",
+        "2hours": "2 h",
+        "6hours": "6 h"
+      }
+    },
+    "backup": {
+      "title": "Sauvegarde & restauration",
+      "subtitle": "Empaqueter la base locale dans une archive .cartable portable. Les identifiants ne sont PAS inclus.",
+      "download": "Télécharger .cartable",
+      "restore": "Restaurer depuis .cartable…",
+      "restoring": "Restauration…",
+      "restored": "Restauré. {{grades}} notes, {{lessons}} cours. Rechargement…",
+      "restore_failed": "Échec de la restauration : {{error}}"
+    },
+    "about": {
+      "title": "À propos",
+      "version": "Version",
+      "data_dir": "Dossier data",
+      "cartable_dir": "Dossier cartable",
+      "language": "Langue",
+      "check_updates": "Vérifier les mises à jour",
+      "checking": "Vérification…",
+      "update_available": "Mise à jour disponible : v{{version}}",
+      "release_notes": "Notes de version ↗",
+      "up_to_date": "À jour (dernière : v{{version}})",
+      "no_releases": "Aucune version publiée pour l'instant."
+    }
+  },
+  "welcome": {
+    "title": "Bienvenue dans Cartable",
+    "intro": "Cartable copie le compte Pronote de votre enfant dans une base SQLite locale, pour que cette appli Mac affiche les notes, devoirs, emploi du temps, bulletins publiés, et un chat assisté par Claude — <0>sans rien envoyer hors de votre machine</0>. Commençons par connecter Pronote.",
+    "choice_qr": "Scanner le QR depuis Pronote mobile",
+    "choice_qr_sub": "Sur l'appli Pronote du téléphone → Mon compte → Connecter un nouvel appareil. Choisissez un code à 4 chiffres, puis déposez la capture du QR ici.",
+    "choice_manual": "Saisir URL + identifiants",
+    "choice_manual_sub": "Vous aurez besoin de l'URL Pronote (eleve.html ou parent.html), de l'identifiant et du mot de passe utilisés sur le web.",
+    "manual": {
+      "title": "Connexion manuelle",
+      "url": "URL Pronote",
+      "auth_mode": "Mode d'auth",
+      "ent_provider": "Fournisseur ENT",
+      "username": "Identifiant",
+      "password": "Mot de passe",
+      "child": "Enfant (compte parent uniquement, optionnel)",
+      "stored_locally": "Stocké localement dans <0>~/Documents/Claude/cartable/.env</0>. Jamais transmis ailleurs qu'à Pronote."
+    },
+    "qr": {
+      "title": "Connexion par QR",
+      "step_1": "Sur Pronote mobile : <0>Compte → Connecter un nouvel appareil</0>.",
+      "step_2": "Choisissez un code à 4 chiffres (vous le saisirez ici).",
+      "step_3": "Soit prenez une capture du QR et déposez-la ci-dessous, soit collez directement le JSON du QR si vous l'avez.",
+      "from_screenshot": "Depuis une capture de QR",
+      "pick_image": "Choisir un PNG / JPG…",
+      "paste_json": "Ou coller le JSON du QR",
+      "use_json": "Utiliser ce JSON",
+      "decoded": "QR décodé.",
+      "decoded_url": "URL : {{url}}",
+      "decoded_login": "Identifiant : {{login}}",
+      "pin_label": "Code à 4 chiffres défini sur le téléphone",
+      "pin_placeholder": "0000",
+      "connecting": "Communication avec Pronote…",
+      "error_no_qr": "Aucun QR détecté dans l'image.",
+      "error_bad_payload": "QR décodé, mais ce n'est pas un code de connexion Pronote (login/jeton/url manquants).",
+      "error_bad_json": "JSON invalide : {{error}}"
+    }
+  },
+  "boot": {
+    "starting": "Démarrage…",
+    "waiting_backend": "En attente du backend local…"
+  }
+}

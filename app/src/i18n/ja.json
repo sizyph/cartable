@@ -1,0 +1,221 @@
+{
+  "lang": { "name": "日本語" },
+  "nav": {
+    "schedule": "時間割",
+    "schedule_hint": "授業とテスト",
+    "homework": "宿題",
+    "homework_hint": "やるべき課題",
+    "grades": "成績",
+    "grades_hint": "点数と平均",
+    "chat": "チャット",
+    "chat_hint": "Claude に学校のことを聞く",
+    "settings": "設定",
+    "settings_hint": "アカウント・同期・バックアップ"
+  },
+  "common": {
+    "today": "今日",
+    "tomorrow": "明日",
+    "yesterday": "昨日",
+    "in_days_one": "{{count}} 日後",
+    "in_days_other": "{{count}} 日後",
+    "days_ago_one": "{{count}} 日前",
+    "days_ago_other": "{{count}} 日前",
+    "loading": "読み込み中…",
+    "back": "戻る",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "saving": "保存中…",
+    "connect": "接続",
+    "ok": "OK"
+  },
+  "sidebar": {
+    "last_sync_label": "最終同期:",
+    "never": "未実行",
+    "sync_now": "今すぐ同期",
+    "syncing": "同期中…",
+    "ago_seconds": "{{n}} 秒前",
+    "ago_minutes": "{{n}} 分前",
+    "ago_hours": "{{n}} 時間前",
+    "ago_days": "{{n}} 日前"
+  },
+  "schedule": {
+    "title": "時間割",
+    "week_of": "{{date}} の週",
+    "no_lessons": "授業なし",
+    "test_tag": "テスト",
+    "google_calendar_setup_needed": "Google カレンダー — 初回設定が必要",
+    "google_calendar_setup_intro": "2 週間分のカレンダー同期を有効にするには、Google OAuth Desktop の認証情報をここに置いてください:",
+    "google_calendar_setup_outro": "(console.cloud.google.com でプロジェクトを作成し、Calendar API を有効化、種類「Desktop」の OAuth 2.0 クライアントを作成して JSON をダウンロードします。)",
+    "loading_status": "カレンダー状態を取得中…",
+    "connect_google_calendar": "Google カレンダーを接続",
+    "opening_browser": "ブラウザを起動中…",
+    "sync_2_weeks": "2 週間分を Google カレンダーへ同期",
+    "syncing_calendar": "2 週間分を送信中…"
+  },
+  "homework": {
+    "title": "宿題",
+    "window": {
+      "current": "今週",
+      "next": "来週",
+      "later": "それ以降",
+      "overdue": "期限切れ",
+      "current_label": "{{date}} の週",
+      "next_label": "{{date}} の週",
+      "overdue_label": "期限切れ・未完了",
+      "later_label": "今学期のそれ以降"
+    },
+    "pending_of_total": "{{pending}} 件未了 / 全 {{total}} 件",
+    "items_one": "{{count}} 件",
+    "items_other": "{{count}} 件",
+    "empty": "この期間には宿題がありません。",
+    "no_description": "(説明なし)"
+  },
+  "grades": {
+    "title": "成績",
+    "current_period": "現在の学期: {{name}}",
+    "card": {
+      "subject_averages": "教科別平均(現在の学期)",
+      "subject_averages_sub": "本人 vs クラス",
+      "trend": "学期ごとの推移",
+      "trend_sub": "教科別の本人平均、20 点換算",
+      "leaderboard": "教科ランキング",
+      "leaderboard_sub": "クラス平均との差で並び替え",
+      "recent_grades": "最新の点数",
+      "recent_grades_sub": "新しい順・重複排除済み",
+      "bulletins": "成績通知表",
+      "bulletins_sub": "公開済みの通知表 — クリックで PDF として印刷・保存"
+    },
+    "table": {
+      "subject": "教科",
+      "student": "本人",
+      "class": "クラス",
+      "gap": "差"
+    },
+    "trend_need_2_periods": "推移を表示するには 2 学期以上のデータが必要です。",
+    "no_bulletins": "同期済みの学期にはまだ通知表が公開されていません。先生がコメントと平均を確定すると、ここに表示されます。",
+    "open_bulletin": "開く / PDF として印刷"
+  },
+  "chat": {
+    "title": "チャット",
+    "subtitle": "学校のデータについて Claude に質問できます。cartable スキルがロード済みです。",
+    "session_id": "セッション #{{id}}",
+    "try_one": "こんな質問はいかがですか:",
+    "placeholder": "成績、時間割、先生について…",
+    "thinking": "Claude が考え中…",
+    "send": "送信",
+    "starters": [
+      "今日の重要な予定は?",
+      "今学期の数学の成績は前学期と比べてどう?",
+      "今後 7 日間に提出する宿題を一覧表示して。",
+      "先生に連絡したほうがよさそうな件はある?"
+    ],
+    "voice_button_title": "クリックして入力欄にフォーカスし、お使いの音声入力ツールを起動してください:\n  • Superwhisper / Whisper Flow — 設定済みのショートカット\n  • macOS — 設定 → キーボード → 音声入力、その後ショートカット(デフォルトは Fn キーを 2 回)\n音声入力したテキストがここに入ります。"
+  },
+  "settings": {
+    "title": "設定",
+    "subtitle": "アカウント、同期、バックアップ、バージョン。",
+    "account": {
+      "title": "アカウント",
+      "student": "生徒",
+      "pronote_url": "Pronote URL",
+      "username": "ユーザー名",
+      "auth_mode": "認証方式",
+      "ent_provider": "ENT プロバイダ",
+      "child": "子ども",
+      "password": "パスワード",
+      "password_stored": "•••••••••• (ローカルに保存済み)",
+      "password_not_set": "(未設定)",
+      "edit": "認証情報を編集",
+      "logout": "ログアウト",
+      "logging_out": "ログアウト中…",
+      "logout_confirm": "Pronote の認証情報とトークンを削除しますか? 同期済みのデータベースはそのまま残ります。",
+      "form": {
+        "auth_password": "パスワード(直接)",
+        "auth_ent": "ENT(学校ポータル)",
+        "password_placeholder_keep": "•••••• (空欄で現在のパスワードを保持)",
+        "password_placeholder_new": "パスワードを入力",
+        "child_placeholder": "Pronote 表示通りの正確な名前",
+        "ent_placeholder": "ac_rennes, ent_hdf, ile_de_france, …"
+      }
+    },
+    "autosync": {
+      "title": "自動同期",
+      "subtitle": "launchd ジョブがバックグラウンドでローカル DB を更新します。",
+      "running": "実行中",
+      "stopped": "停止",
+      "plist_target": "Plist: {{path}}",
+      "template_missing": "テンプレートがありません — プロジェクトを再インストールしてください。",
+      "interval": "間隔",
+      "presets": {
+        "15min": "15 分",
+        "30min": "30 分",
+        "1hour": "1 時間",
+        "2hours": "2 時間",
+        "6hours": "6 時間"
+      }
+    },
+    "backup": {
+      "title": "バックアップと復元",
+      "subtitle": "ローカル DB を持ち運び可能な .cartable アーカイブにまとめます。認証情報は含まれません。",
+      "download": ".cartable をダウンロード",
+      "restore": ".cartable から復元…",
+      "restoring": "復元中…",
+      "restored": "復元完了。{{grades}} 点、{{lessons}} コマ。再読み込み中…",
+      "restore_failed": "復元に失敗: {{error}}"
+    },
+    "about": {
+      "title": "バージョン情報",
+      "version": "バージョン",
+      "data_dir": "データディレクトリ",
+      "cartable_dir": "Cartable ディレクトリ",
+      "language": "言語",
+      "check_updates": "アップデートを確認",
+      "checking": "確認中…",
+      "update_available": "アップデートあり: v{{version}}",
+      "release_notes": "リリースノート ↗",
+      "up_to_date": "最新です (最新版: v{{version}})",
+      "no_releases": "まだリリースは公開されていません。"
+    }
+  },
+  "welcome": {
+    "title": "Cartable へようこそ",
+    "intro": "Cartable はお子様の Pronote アカウントをローカルの SQLite データベースに複製します。この Mac アプリで成績、宿題、週の時間割、公開済み通知表、Claude によるチャットが利用できます — <0>すべてご自身のマシン内で完結</0>。まずは Pronote に接続しましょう。",
+    "choice_qr": "Pronote モバイルから QR をスキャン",
+    "choice_qr_sub": "スマホの Pronote アプリで → アカウント → 新しいデバイスを接続。4 桁のコードを決めて、QR のスクショをここに置いてください。",
+    "choice_manual": "URL とログイン情報を入力",
+    "choice_manual_sub": "Pronote の URL (eleve.html または parent.html)、ウェブで使うユーザー名とパスワードが必要です。",
+    "manual": {
+      "title": "手動ログイン",
+      "url": "Pronote URL",
+      "auth_mode": "認証方式",
+      "ent_provider": "ENT プロバイダ",
+      "username": "ユーザー名",
+      "password": "パスワード",
+      "child": "子ども (保護者アカウントのみ・任意)",
+      "stored_locally": "<0>~/Documents/Claude/cartable/.env</0> にローカル保存されます。Pronote 以外には一切送信されません。"
+    },
+    "qr": {
+      "title": "QR コードログイン",
+      "step_1": "Pronote モバイルで:<0>アカウント → 新しいデバイスを接続</0>。",
+      "step_2": "4 桁のコードを選んでください(ここで入力します)。",
+      "step_3": "QR のスクショを下に置くか、QR に含まれる JSON を直接貼り付けてください。",
+      "from_screenshot": "QR スクショから",
+      "pick_image": "PNG / JPG を選択…",
+      "paste_json": "または QR の JSON を貼り付け",
+      "use_json": "この JSON を使用",
+      "decoded": "QR を読み取りました。",
+      "decoded_url": "URL: {{url}}",
+      "decoded_login": "ログイン: {{login}}",
+      "pin_label": "スマホで設定した 4 桁の PIN",
+      "pin_placeholder": "0000",
+      "connecting": "Pronote と通信中…",
+      "error_no_qr": "画像から QR コードが見つかりませんでした。",
+      "error_bad_payload": "QR は読み取れましたが、Pronote のログインコードではないようです (login/jeton/url が見つかりません)。",
+      "error_bad_json": "JSON が無効: {{error}}"
+    }
+  },
+  "boot": {
+    "starting": "起動中…",
+    "waiting_backend": "ローカルバックエンドを待っています…"
+  }
+}

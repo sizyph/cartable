@@ -1,9 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import clsx from "clsx";
 
 export function CalendarSyncButton() {
+  const { t } = useTranslation();
   const status = useQuery({ queryKey: ["calendar", "status"], queryFn: api.calendarStatus });
   const [lastResult, setLastResult] = useState<string | null>(null);
 
@@ -11,39 +13,36 @@ export function CalendarSyncButton() {
     mutationFn: api.calendarAuthorize,
     onSuccess: () => {
       status.refetch();
-      setLastResult("Connected — try syncing now");
+      setLastResult(null);
     },
-    onError: (e: any) => setLastResult(`Auth failed: ${e.message ?? e}`),
+    onError: (e: any) => setLastResult(`${e.message ?? e}`),
   });
 
   const sync = useMutation({
     mutationFn: () => api.calendarSync(14),
     onSuccess: (r) =>
       setLastResult(
-        `${r.calendar}: +${r.inserted} new, ~${r.updated} updated, ${r.errors} errors  (${r.deduplicated}/${r.lessons_seen} lessons after dedupe)`,
+        `${r.calendar}: +${r.inserted} / ~${r.updated} / ${r.errors} errors (${r.deduplicated}/${r.lessons_seen})`,
       ),
-    onError: (e: any) => setLastResult(`Sync failed: ${e.message ?? e}`),
+    onError: (e: any) => setLastResult(`${e.message ?? e}`),
   });
 
   const s = status.data;
 
   if (!s) {
-    return <div className="text-xs text-pap-muted">Loading calendar status…</div>;
+    return <div className="text-xs text-pap-muted">{t("schedule.loading_status")}</div>;
   }
 
   if (!s.has_credentials) {
     return (
       <details className="text-xs text-pap-muted bg-pap-surface rounded-md px-3 py-2 border border-pap-border">
-        <summary className="cursor-pointer">Google Calendar — needs one-time setup</summary>
+        <summary className="cursor-pointer">{t("schedule.google_calendar_setup_needed")}</summary>
         <div className="mt-2 space-y-1.5 leading-relaxed">
-          <p>To enable the 2-week calendar sync, drop your Google OAuth Desktop credentials at:</p>
+          <p>{t("schedule.google_calendar_setup_intro")}</p>
           <code className="block bg-pap-surface-2 px-2 py-1 rounded text-pap-text break-all">
             {s.credentials_path}
           </code>
-          <p>
-            (Create a project at console.cloud.google.com, enable the Calendar API,
-            create an OAuth 2.0 Client of type "Desktop", download the JSON.)
-          </p>
+          <p>{t("schedule.google_calendar_setup_outro")}</p>
         </div>
       </details>
     );
@@ -54,7 +53,7 @@ export function CalendarSyncButton() {
       <Cluster
         primary={
           <Btn onClick={() => authorize.mutate()} disabled={authorize.isPending}>
-            {authorize.isPending ? "Opening browser…" : "Connect Google Calendar"}
+            {authorize.isPending ? t("schedule.opening_browser") : t("schedule.connect_google_calendar")}
           </Btn>
         }
         msg={lastResult}
@@ -66,7 +65,7 @@ export function CalendarSyncButton() {
     <Cluster
       primary={
         <Btn onClick={() => sync.mutate()} disabled={sync.isPending} variant="accent">
-          {sync.isPending ? "Pushing 2 weeks…" : "Sync 2 weeks to Google Calendar"}
+          {sync.isPending ? t("schedule.syncing_calendar") : t("schedule.sync_2_weeks")}
         </Btn>
       }
       msg={lastResult}

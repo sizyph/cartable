@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { api } from "./api";
 import { Layout } from "./components/Layout";
 import { ScheduleView } from "./components/ScheduleView";
@@ -12,6 +13,7 @@ import { WelcomeScreen } from "./components/WelcomeScreen";
 type View = "schedule" | "homework" | "grades" | "chat" | "settings";
 
 function App() {
+  const { t } = useTranslation();
   const [view, setView] = useState<View>("schedule");
 
   // Gate: if the backend has no usable .env, show the welcome flow.
@@ -23,10 +25,10 @@ function App() {
   });
 
   if (account.isLoading) {
-    return <BootSplash label="Starting up…" />;
+    return <BootSplash label={t("boot.starting")} />;
   }
   if (account.error) {
-    return <BootSplash label="Waiting for the local backend…" muted />;
+    return <BootSplash label={t("boot.waiting_backend")} muted />;
   }
   if (!account.data?.is_configured) {
     return <WelcomeScreen />;

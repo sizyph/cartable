@@ -1,22 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api";
+import { LANGUAGES, LangCode } from "../i18n";
 import clsx from "clsx";
 
-const INTERVAL_PRESETS: { label: string; value: number }[] = [
-  { label: "15 min", value: 900 },
-  { label: "30 min", value: 1800 },
-  { label: "1 hour", value: 3600 },
-  { label: "2 hours", value: 7200 },
-  { label: "6 hours", value: 21600 },
+const INTERVAL_PRESETS: { key: string; value: number }[] = [
+  { key: "15min", value: 900 },
+  { key: "30min", value: 1800 },
+  { key: "1hour", value: 3600 },
+  { key: "2hours", value: 7200 },
+  { key: "6hours", value: 21600 },
 ];
 
 export function SettingsPanel() {
+  const { t } = useTranslation();
   return (
     <div className="p-8 max-w-3xl mx-auto space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-pap-muted">Account, sync, backup, app version.</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("settings.title")}</h1>
+        <p className="text-sm text-pap-muted">{t("settings.subtitle")}</p>
       </header>
 
       <AccountSection />
@@ -30,6 +33,7 @@ export function SettingsPanel() {
 // ---------- Account ----------------------------------------------------------
 
 function AccountSection() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const acc = useQuery({ queryKey: ["settings", "account"], queryFn: api.settingsAccount });
   const [editing, setEditing] = useState(false);
@@ -48,16 +52,16 @@ function AccountSection() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["settings"] }),
   });
 
-  if (!acc.data) return <Card title="Account"><Skel /></Card>;
+  if (!acc.data) return <Card title={t("settings.account.title")}><Skel /></Card>;
   const a = acc.data;
 
   return (
-    <Card title="Account">
+    <Card title={t("settings.account.title")}>
       {!editing ? (
         <div className="space-y-3 text-sm">
           {a.student.name && (
             <div className="flex gap-4 items-baseline">
-              <span className="text-pap-muted w-32">Student</span>
+              <span className="text-pap-muted w-32">{t("settings.account.student")}</span>
               <span>
                 {a.student.name}
                 {a.student.class_name && (
@@ -69,28 +73,28 @@ function AccountSection() {
               </span>
             </div>
           )}
-          <KV label="Pronote URL" value={a.pronote_url || "—"} mono />
-          <KV label="Username" value={a.username || "—"} mono />
-          <KV label="Auth mode" value={a.auth_mode} />
-          {a.ent_provider && <KV label="ENT provider" value={a.ent_provider} />}
-          {a.child_name && <KV label="Child" value={a.child_name} />}
+          <KV label={t("settings.account.pronote_url")} value={a.pronote_url || "—"} mono />
+          <KV label={t("settings.account.username")} value={a.username || "—"} mono />
+          <KV label={t("settings.account.auth_mode")} value={a.auth_mode} />
+          {a.ent_provider && <KV label={t("settings.account.ent_provider")} value={a.ent_provider} />}
+          {a.child_name && <KV label={t("settings.account.child")} value={a.child_name} />}
           <KV
-            label="Password"
-            value={a.has_password ? "•••••••••• (stored locally)" : "(not set)"}
+            label={t("settings.account.password")}
+            value={a.has_password ? t("settings.account.password_stored") : t("settings.account.password_not_set")}
           />
           <div className="pt-2 flex gap-2">
-            <Btn onClick={() => setEditing(true)}>Edit credentials</Btn>
+            <Btn onClick={() => setEditing(true)}>{t("settings.account.edit")}</Btn>
             {a.username && (
               <Btn
                 variant="danger"
                 onClick={() => {
-                  if (confirm("Wipe Pronote credentials and the auth token? The synced database stays intact.")) {
+                  if (confirm(t("settings.account.logout_confirm"))) {
                     logout.mutate();
                   }
                 }}
                 disabled={logout.isPending}
               >
-                {logout.isPending ? "Logging out…" : "Log out"}
+                {logout.isPending ? t("settings.account.logging_out") : t("settings.account.logout")}
               </Btn>
             )}
           </div>
@@ -137,6 +141,7 @@ function AccountForm({
   pending: boolean;
   error?: string;
 }) {
+  const { t } = useTranslation();
   const [url, setUrl] = useState(initial.pronote_url);
   const [mode, setMode] = useState(initial.auth_mode || "password");
   const [user, setUser] = useState(initial.username);
@@ -153,13 +158,13 @@ function AccountForm({
           pronote_url: url,
           auth_mode: mode,
           username: user,
-          password: pwd, // blank = keep existing
+          password: pwd,
           ent_provider: ent,
           child_name: child,
         });
       }}
     >
-      <Field label="Pronote URL">
+      <Field label={t("settings.account.pronote_url")}>
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
@@ -168,49 +173,49 @@ function AccountForm({
           className={inputCls}
         />
       </Field>
-      <Field label="Auth mode">
+      <Field label={t("settings.account.auth_mode")}>
         <select value={mode} onChange={(e) => setMode(e.target.value)} className={inputCls}>
-          <option value="password">password</option>
-          <option value="ent">ent</option>
+          <option value="password">{t("settings.account.form.auth_password")}</option>
+          <option value="ent">{t("settings.account.form.auth_ent")}</option>
         </select>
       </Field>
       {mode === "ent" && (
-        <Field label="ENT provider">
+        <Field label={t("settings.account.ent_provider")}>
           <input
             value={ent}
             onChange={(e) => setEnt(e.target.value)}
-            placeholder="ac_rennes, ent_hdf, ile_de_france, …"
+            placeholder={t("settings.account.form.ent_placeholder")}
             className={inputCls}
           />
         </Field>
       )}
-      <Field label="Username">
+      <Field label={t("settings.account.username")}>
         <input value={user} onChange={(e) => setUser(e.target.value)} required className={inputCls} />
       </Field>
-      <Field label="Password">
+      <Field label={t("settings.account.password")}>
         <input
           type="password"
           value={pwd}
           onChange={(e) => setPwd(e.target.value)}
-          placeholder={initial.has_password ? "•••••• (leave blank to keep current)" : "Enter password"}
+          placeholder={initial.has_password ? t("settings.account.form.password_placeholder_keep") : t("settings.account.form.password_placeholder_new")}
           className={inputCls}
         />
       </Field>
-      <Field label="Child (parent accounts only, optional)">
+      <Field label={t("settings.account.child")}>
         <input
           value={child}
           onChange={(e) => setChild(e.target.value)}
-          placeholder="exact name as Pronote displays it"
+          placeholder={t("settings.account.form.child_placeholder")}
           className={inputCls}
         />
       </Field>
       {error && <p className="text-pap-bad text-xs">{error}</p>}
       <div className="flex gap-2 pt-1">
         <Btn variant="accent" type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save"}
+          {pending ? t("common.saving") : t("common.save")}
         </Btn>
         <Btn type="button" onClick={onCancel} disabled={pending}>
-          Cancel
+          {t("common.cancel")}
         </Btn>
       </div>
     </form>
@@ -220,6 +225,7 @@ function AccountForm({
 // ---------- Auto-sync --------------------------------------------------------
 
 function AutoSyncSection() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const status = useQuery({
     queryKey: ["settings", "auto-sync"],
@@ -232,31 +238,28 @@ function AutoSyncSection() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["settings", "auto-sync"] }),
   });
 
-  if (!status.data) return <Card title="Auto-sync"><Skel /></Card>;
+  if (!status.data) return <Card title={t("settings.autosync.title")}><Skel /></Card>;
   const s = status.data;
   const current = s.interval_seconds ?? 1800;
 
   return (
-    <Card
-      title="Auto-sync"
-      subtitle="A launchd job refreshes the local database in the background."
-    >
+    <Card title={t("settings.autosync.title")} subtitle={t("settings.autosync.subtitle")}>
       <div className="space-y-3 text-sm">
         <div className="flex items-center gap-3">
           <Toggle
             checked={s.loaded}
             onChange={(v) => set.mutate({ enabled: v, interval: current })}
             disabled={set.isPending || !s.template_exists}
-            label={s.loaded ? "Running" : "Stopped"}
+            label={s.loaded ? t("settings.autosync.running") : t("settings.autosync.stopped")}
           />
           <span className="text-xs text-pap-muted">
             {s.template_exists
-              ? `Plist target: ${s.plist_target}`
-              : "Template missing — reinstall the project."}
+              ? t("settings.autosync.plist_target", { path: s.plist_target })
+              : t("settings.autosync.template_missing")}
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-pap-muted w-32">Interval</span>
+          <span className="text-pap-muted w-32">{t("settings.autosync.interval")}</span>
           <div className="flex gap-1 bg-pap-surface-2 rounded p-1">
             {INTERVAL_PRESETS.map((p) => (
               <button
@@ -271,7 +274,7 @@ function AutoSyncSection() {
                     : "text-pap-muted hover:text-pap-text hover:bg-pap-border/50",
                 )}
               >
-                {p.label}
+                {t(`settings.autosync.presets.${p.key}`)}
               </button>
             ))}
           </div>
@@ -285,6 +288,7 @@ function AutoSyncSection() {
 // ---------- Backup -----------------------------------------------------------
 
 function BackupSection() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -293,30 +297,29 @@ function BackupSection() {
     mutationFn: (file: File) => api.settingsRestore(file),
     onSuccess: (r) => {
       setMsg(
-        `Restored. ${r.manifest?.last_sync?.counts?.grades ?? "?"} grades, ${r.manifest?.last_sync?.counts?.lessons ?? "?"} lessons. Reloading…`,
+        t("settings.backup.restored", {
+          grades: r.manifest?.last_sync?.counts?.grades ?? "?",
+          lessons: r.manifest?.last_sync?.counts?.lessons ?? "?",
+        }),
       );
       qc.invalidateQueries();
-      // Hard reload — restored DB might have completely different content.
       setTimeout(() => window.location.reload(), 1500);
     },
-    onError: (e: any) => setMsg(`Restore failed: ${e.message ?? e}`),
+    onError: (e: any) => setMsg(t("settings.backup.restore_failed", { error: e.message ?? e })),
   });
 
   return (
-    <Card
-      title="Backup & restore"
-      subtitle="Pack the local database into a portable .cartable archive. Credentials are NOT included."
-    >
+    <Card title={t("settings.backup.title")} subtitle={t("settings.backup.subtitle")}>
       <div className="flex flex-wrap gap-2 items-center">
         <a
           href={api.settingsBackupUrl()}
           download
           className="px-3 py-1.5 rounded-md bg-pap-accent text-pap-bg text-sm font-medium hover:bg-pap-accent/85"
         >
-          Download .cartable
+          {t("settings.backup.download")}
         </a>
         <Btn onClick={() => fileRef.current?.click()} disabled={restore.isPending}>
-          {restore.isPending ? "Restoring…" : "Restore from .cartable…"}
+          {restore.isPending ? t("settings.backup.restoring") : t("settings.backup.restore")}
         </Btn>
         <input
           ref={fileRef}
@@ -338,25 +341,27 @@ function BackupSection() {
 // ---------- About ------------------------------------------------------------
 
 function AboutSection() {
+  const { t } = useTranslation();
   const version = useQuery({ queryKey: ["settings", "version"], queryFn: api.settingsVersion });
   const check = useMutation({ mutationFn: api.settingsUpdateCheck });
 
   return (
-    <Card title="About">
+    <Card title={t("settings.about.title")}>
       <div className="space-y-3 text-sm">
-        <KV label="Version" value={version.data?.version ?? "—"} mono />
-        <KV label="Data dir" value={version.data?.data_dir ?? "—"} mono />
-        <KV label="Cartable dir" value={version.data?.cartable_dir ?? "—"} mono />
+        <KV label={t("settings.about.version")} value={version.data?.version ?? "—"} mono />
+        <KV label={t("settings.about.data_dir")} value={version.data?.data_dir ?? "—"} mono />
+        <KV label={t("settings.about.cartable_dir")} value={version.data?.cartable_dir ?? "—"} mono />
+        <LanguageSelector />
         <div className="flex items-center gap-3 pt-1">
           <Btn onClick={() => check.mutate()} disabled={check.isPending}>
-            {check.isPending ? "Checking…" : "Check for updates"}
+            {check.isPending ? t("settings.about.checking") : t("settings.about.check_updates")}
           </Btn>
           {check.data?.ok && (
             <span className="text-xs">
               {check.data.is_newer ? (
                 <>
                   <span className="text-pap-good font-medium">
-                    Update available: v{check.data.latest}
+                    {t("settings.about.update_available", { version: check.data.latest })}
                   </span>
                   {check.data.html_url && (
                     <a
@@ -365,16 +370,18 @@ function AboutSection() {
                       rel="noreferrer"
                       className="ml-2 text-pap-accent underline"
                     >
-                      Release notes ↗
+                      {t("settings.about.release_notes")}
                     </a>
                   )}
                 </>
               ) : check.data.latest ? (
                 <span className="text-pap-muted">
-                  Up to date (latest: v{check.data.latest})
+                  {t("settings.about.up_to_date", { version: check.data.latest })}
                 </span>
               ) : (
-                <span className="text-pap-muted">{check.data.note ?? "No releases yet."}</span>
+                <span className="text-pap-muted">
+                  {check.data.note ?? t("settings.about.no_releases")}
+                </span>
               )}
             </span>
           )}
@@ -384,6 +391,42 @@ function AboutSection() {
         </div>
       </div>
     </Card>
+  );
+}
+
+function LanguageSelector() {
+  const { t, i18n: i18nInst } = useTranslation();
+  const current = (i18nInst.language?.slice(0, 2) ?? "en") as LangCode;
+  return (
+    <div className="flex gap-4 items-baseline">
+      <span className="text-pap-muted w-32 shrink-0">{t("settings.about.language")}</span>
+      <div className="flex gap-1 bg-pap-surface-2 rounded p-1">
+        {LANGUAGES.map((l) => (
+          <button
+            key={l.code}
+            type="button"
+            onClick={() => {
+              i18nInst.changeLanguage(l.code);
+              // Also stash explicitly — i18next-browser-languagedetector caches automatically,
+              // but doing this defensively lets a refresh pick the choice up reliably.
+              try {
+                localStorage.setItem("cartable-language", l.code);
+              } catch {
+                // ignore — privacy modes etc.
+              }
+            }}
+            className={clsx(
+              "px-3 py-1 text-xs rounded transition-colors",
+              current === l.code
+                ? "bg-pap-accent text-pap-bg font-medium"
+                : "text-pap-muted hover:text-pap-text hover:bg-pap-border/50",
+            )}
+          >
+            {l.name}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

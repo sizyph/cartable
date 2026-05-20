@@ -1,7 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import jsQR from "jsqr";
+import { Trans, useTranslation } from "react-i18next";
 import { api } from "../api";
+import { LANGUAGES, LangCode } from "../i18n";
 import clsx from "clsx";
 
 type Step = "intro" | "manual" | "qr";
@@ -17,41 +19,75 @@ export function WelcomeScreen() {
           {step === "manual" && <ManualLogin onBack={() => setStep("intro")} />}
           {step === "qr" && <QrLogin onBack={() => setStep("intro")} />}
         </div>
+        <LanguageRow />
       </div>
     </div>
   );
 }
 
 function Hero() {
+  const { t } = useTranslation();
   return (
     <header className="text-center space-y-2">
       <div className="text-5xl">📓</div>
-      <h1 className="text-2xl font-semibold tracking-tight">Welcome to Cartable</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{t("welcome.title")}</h1>
       <p className="text-sm text-pap-muted leading-relaxed">
-        Cartable mirrors your child's Pronote account into a local SQLite database, so this
-        Mac app can show grades, homework, the weekly schedule, published bulletins, and a
-        Claude-powered chat — all <span className="text-pap-text">without sending anything off your machine</span>.
-        First, let's connect to Pronote.
+        <Trans
+          i18nKey="welcome.intro"
+          components={[<span className="text-pap-text" />]}
+        />
       </p>
     </header>
   );
 }
 
+function LanguageRow() {
+  const { i18n: i18nInst } = useTranslation();
+  const current = (i18nInst.language?.slice(0, 2) ?? "en") as LangCode;
+  return (
+    <div className="mt-6 flex items-center justify-center gap-1 bg-pap-surface-2 rounded p-1 w-fit mx-auto">
+      {LANGUAGES.map((l) => (
+        <button
+          key={l.code}
+          type="button"
+          onClick={() => {
+            i18nInst.changeLanguage(l.code);
+            try {
+              localStorage.setItem("cartable-language", l.code);
+            } catch {
+              /* ignore */
+            }
+          }}
+          className={clsx(
+            "px-3 py-1 text-xs rounded transition-colors",
+            current === l.code
+              ? "bg-pap-accent text-pap-bg font-medium"
+              : "text-pap-muted hover:text-pap-text hover:bg-pap-border/50",
+          )}
+        >
+          {l.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function IntroChoices({ onPick }: { onPick: (s: Step) => void }) {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-2 gap-3">
       <ChoiceCard
         onClick={() => onPick("qr")}
         emoji="📱"
-        title="Scan QR from Pronote mobile"
-        subtitle="Open Pronote on your phone → Mon compte → Connecter un nouvel appareil. Pick a 4-digit code, then drop the QR screenshot here."
+        title={t("welcome.choice_qr")}
+        subtitle={t("welcome.choice_qr_sub")}
         accent
       />
       <ChoiceCard
         onClick={() => onPick("manual")}
         emoji="⌨️"
-        title="Enter URL + credentials"
-        subtitle="You'll need the Pronote URL (eleve.html or parent.html) plus the username and password you use on the web."
+        title={t("welcome.choice_manual")}
+        subtitle={t("welcome.choice_manual_sub")}
       />
     </div>
   );
@@ -90,6 +126,7 @@ function ChoiceCard({
 // ---------- manual ----------------------------------------------------------
 
 function ManualLogin({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [url, setUrl] = useState("");
   const [mode, setMode] = useState("password");
@@ -118,8 +155,8 @@ function ManualLogin({ onBack }: { onBack: () => void }) {
         });
       }}
     >
-      <BackBar onBack={onBack} title="Manual login" />
-      <Field label="Pronote URL">
+      <BackBar onBack={onBack} title={t("welcome.manual.title")} />
+      <Field label={t("welcome.manual.url")}>
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
@@ -128,27 +165,27 @@ function ManualLogin({ onBack }: { onBack: () => void }) {
           className={inputCls}
         />
       </Field>
-      <Field label="Auth mode">
+      <Field label={t("welcome.manual.auth_mode")}>
         <select value={mode} onChange={(e) => setMode(e.target.value)} className={inputCls}>
-          <option value="password">password (direct)</option>
-          <option value="ent">ent (school portal)</option>
+          <option value="password">{t("settings.account.form.auth_password")}</option>
+          <option value="ent">{t("settings.account.form.auth_ent")}</option>
         </select>
       </Field>
       {mode === "ent" && (
-        <Field label="ENT provider">
+        <Field label={t("welcome.manual.ent_provider")}>
           <input
             value={ent}
             onChange={(e) => setEnt(e.target.value)}
-            placeholder="ac_rennes, ent_hdf, ile_de_france, …"
+            placeholder={t("settings.account.form.ent_placeholder")}
             required
             className={inputCls}
           />
         </Field>
       )}
-      <Field label="Username">
+      <Field label={t("welcome.manual.username")}>
         <input value={user} onChange={(e) => setUser(e.target.value)} required className={inputCls} />
       </Field>
-      <Field label="Password">
+      <Field label={t("welcome.manual.password")}>
         <input
           type="password"
           value={pwd}
@@ -157,25 +194,25 @@ function ManualLogin({ onBack }: { onBack: () => void }) {
           className={inputCls}
         />
       </Field>
-      <Field label="Child (parents only, optional)">
+      <Field label={t("welcome.manual.child")}>
         <input
           value={child}
           onChange={(e) => setChild(e.target.value)}
-          placeholder="exact name as Pronote shows it"
+          placeholder={t("settings.account.form.child_placeholder")}
           className={inputCls}
         />
       </Field>
       {save.error && <p className="text-pap-bad text-xs">{(save.error as Error).message}</p>}
       <div className="pt-2 flex gap-2 justify-end">
         <button type="button" onClick={onBack} className={btnGhost} disabled={save.isPending}>
-          Back
+          {t("common.back")}
         </button>
         <button type="submit" className={btnAccent} disabled={save.isPending}>
-          {save.isPending ? "Saving…" : "Connect"}
+          {save.isPending ? t("common.saving") : t("common.connect")}
         </button>
       </div>
       <p className="text-xs text-pap-muted">
-        Stored locally at <code>{"~/Documents/Claude/cartable/.env"}</code>. Never transmitted anywhere except Pronote itself.
+        <Trans i18nKey="welcome.manual.stored_locally" components={[<code />]} />
       </p>
     </form>
   );
@@ -184,6 +221,7 @@ function ManualLogin({ onBack }: { onBack: () => void }) {
 // ---------- QR --------------------------------------------------------------
 
 function QrLogin({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [qr, setQr] = useState<Record<string, any> | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
@@ -203,10 +241,10 @@ function QrLogin({ onBack }: { onBack: () => void }) {
       const img = await loadImage(file);
       const { data, width, height } = imageData(img);
       const result = jsQR(data, width, height);
-      if (!result) throw new Error("No QR code found in this image.");
+      if (!result) throw new Error(t("welcome.qr.error_no_qr"));
       const parsed = JSON.parse(result.data);
       if (!parsed || typeof parsed !== "object" || !parsed.login || !parsed.jeton || !parsed.url) {
-        throw new Error("QR decoded, but it doesn't look like a Pronote login code (missing login/jeton/url).");
+        throw new Error(t("welcome.qr.error_bad_payload"));
       }
       setQr(parsed);
       setJsonText(JSON.stringify(parsed, null, 2));
@@ -220,32 +258,32 @@ function QrLogin({ onBack }: { onBack: () => void }) {
     try {
       const parsed = JSON.parse(jsonText);
       if (!parsed.login || !parsed.jeton || !parsed.url) {
-        throw new Error("Missing login/jeton/url.");
+        throw new Error(t("welcome.qr.error_bad_payload"));
       }
       setQr(parsed);
     } catch (e: any) {
-      setQrError(`Invalid JSON: ${e.message ?? e}`);
+      setQrError(t("welcome.qr.error_bad_json", { error: e.message ?? e }));
     }
   }
 
   return (
     <div className="space-y-3 text-sm">
-      <BackBar onBack={onBack} title="QR-code login" />
+      <BackBar onBack={onBack} title={t("welcome.qr.title")} />
       <ol className="text-xs text-pap-muted space-y-1 list-decimal pl-5">
-        <li>On Pronote mobile: <strong>Compte → Connecter un nouvel appareil</strong>.</li>
-        <li>Choose a 4-digit code (you'll enter it here).</li>
-        <li>Either take a screenshot of the QR and drop it below, or paste the JSON contained in the QR if you have it.</li>
+        <li><Trans i18nKey="welcome.qr.step_1" components={[<strong />]} /></li>
+        <li>{t("welcome.qr.step_2")}</li>
+        <li>{t("welcome.qr.step_3")}</li>
       </ol>
 
       <div className="grid grid-cols-2 gap-3 mt-2">
         <div className="rounded-md border border-pap-border bg-pap-surface-2 p-3">
-          <div className="text-xs font-semibold mb-2">From a QR screenshot</div>
+          <div className="text-xs font-semibold mb-2">{t("welcome.qr.from_screenshot")}</div>
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
             className={btnGhost + " w-full"}
           >
-            Pick a PNG / JPG…
+            {t("welcome.qr.pick_image")}
           </button>
           <input
             ref={fileRef}
@@ -260,7 +298,7 @@ function QrLogin({ onBack }: { onBack: () => void }) {
           />
         </div>
         <div className="rounded-md border border-pap-border bg-pap-surface-2 p-3">
-          <div className="text-xs font-semibold mb-2">Or paste the QR JSON</div>
+          <div className="text-xs font-semibold mb-2">{t("welcome.qr.paste_json")}</div>
           <textarea
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
@@ -273,7 +311,7 @@ function QrLogin({ onBack }: { onBack: () => void }) {
             onClick={applyPastedJson}
             className={btnGhost + " w-full mt-2"}
           >
-            Use this JSON
+            {t("welcome.qr.use_json")}
           </button>
         </div>
       </div>
@@ -282,19 +320,19 @@ function QrLogin({ onBack }: { onBack: () => void }) {
 
       {qr && (
         <div className="rounded-md border border-pap-good/40 bg-pap-good/10 p-3 text-xs">
-          <div className="font-semibold text-pap-good">QR decoded.</div>
-          <div className="text-pap-muted mt-1 break-all">URL: {qr.url}</div>
-          <div className="text-pap-muted">Login: {qr.login}</div>
+          <div className="font-semibold text-pap-good">{t("welcome.qr.decoded")}</div>
+          <div className="text-pap-muted mt-1 break-all">{t("welcome.qr.decoded_url", { url: qr.url })}</div>
+          <div className="text-pap-muted">{t("welcome.qr.decoded_login", { login: qr.login })}</div>
         </div>
       )}
 
-      <Field label="4-digit PIN you set on the phone">
+      <Field label={t("welcome.qr.pin_label")}>
         <input
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
           inputMode="numeric"
           pattern="\d{4}"
-          placeholder="0000"
+          placeholder={t("welcome.qr.pin_placeholder")}
           className={inputCls + " w-24 tracking-[0.5em] text-center"}
         />
       </Field>
@@ -303,7 +341,7 @@ function QrLogin({ onBack }: { onBack: () => void }) {
 
       <div className="pt-1 flex gap-2 justify-end">
         <button type="button" onClick={onBack} className={btnGhost} disabled={login.isPending}>
-          Back
+          {t("common.back")}
         </button>
         <button
           type="button"
@@ -311,7 +349,7 @@ function QrLogin({ onBack }: { onBack: () => void }) {
           disabled={!qr || pin.length !== 4 || login.isPending}
           className={btnAccent}
         >
-          {login.isPending ? "Talking to Pronote…" : "Connect"}
+          {login.isPending ? t("welcome.qr.connecting") : t("common.connect")}
         </button>
       </div>
     </div>

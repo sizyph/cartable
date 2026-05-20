@@ -1,12 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { addDays, format, startOfWeek } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { api, Lesson } from "../api";
 import { fmtTime } from "../lib/format";
+import { dateFnsLocale } from "../i18n";
 import { CalendarSyncButton } from "./CalendarSyncButton";
 import clsx from "clsx";
 
 export function ScheduleView() {
+  const { t } = useTranslation();
+  const locale = dateFnsLocale();
   const [offset, setOffset] = useState(0); // 0 = this week, 1 = next, -1 = previous
   const { data: lessons = [], isLoading } = useQuery({
     queryKey: ["lessons", "week", offset],
@@ -43,23 +47,23 @@ export function ScheduleView() {
     <div className="p-8 max-w-6xl mx-auto">
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Schedule</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("schedule.title")}</h1>
           <p className="text-sm text-pap-muted">
-            Week of {format(monday, "EEEE d MMMM")}
+            {t("schedule.week_of", { date: format(monday, "EEEE d MMMM", { locale }) })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <CalendarSyncButton />
           <div className="flex gap-1 bg-pap-surface rounded-md p-1">
             <NavBtn onClick={() => setOffset((o) => o - 1)}>←</NavBtn>
-            <NavBtn onClick={() => setOffset(0)} active={offset === 0}>Today</NavBtn>
+            <NavBtn onClick={() => setOffset(0)} active={offset === 0}>{t("common.today")}</NavBtn>
             <NavBtn onClick={() => setOffset((o) => o + 1)}>→</NavBtn>
           </div>
         </div>
       </header>
 
       {isLoading ? (
-        <p className="text-pap-muted">Loading…</p>
+        <p className="text-pap-muted">{t("common.loading")}</p>
       ) : (
         <div className="grid grid-cols-7 gap-3">
           {days.map((d) => {
@@ -76,14 +80,14 @@ export function ScheduleView() {
               >
                 <div>
                   <div className="text-xs uppercase tracking-wide text-pap-muted">
-                    {format(d, "EEE")}
+                    {format(d, "EEE", { locale })}
                   </div>
                   <div className={clsx("text-lg font-semibold", isToday && "text-pap-accent")}>
-                    {format(d, "d MMM")}
+                    {format(d, "d MMM", { locale })}
                   </div>
                 </div>
                 {dayLessons.length === 0 ? (
-                  <div className="text-xs text-pap-muted/60 italic mt-3">no lessons</div>
+                  <div className="text-xs text-pap-muted/60 italic mt-3">{t("schedule.no_lessons")}</div>
                 ) : (
                   <ul className="space-y-1.5">
                     {dayLessons.map((l) => (
@@ -125,6 +129,7 @@ function NavBtn({
 }
 
 function LessonChip({ l }: { l: Lesson }) {
+  const { t } = useTranslation();
   const test = !!l.is_test;
   const cancelled = !!l.canceled;
   return (
@@ -141,7 +146,7 @@ function LessonChip({ l }: { l: Lesson }) {
     >
       <div className="flex items-baseline justify-between gap-2">
         <span className="font-medium tabular-nums">{fmtTime(l.start_dt)}</span>
-        {test && <span className="text-[10px] uppercase tracking-wide text-pap-warn">test</span>}
+        {test && <span className="text-[10px] uppercase tracking-wide text-pap-warn">{t("schedule.test_tag")}</span>}
       </div>
       <div className="truncate font-medium">{l.subject_name ?? "—"}</div>
       <div className="text-pap-muted truncate">

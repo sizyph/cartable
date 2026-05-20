@@ -1,31 +1,32 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import clsx from "clsx";
 
 type View = "schedule" | "homework" | "grades" | "chat" | "settings";
-
-const tabs: { id: View; label: string; hint: string }[] = [
-  { id: "schedule", label: "Schedule", hint: "Lessons & exams" },
-  { id: "homework", label: "Homework", hint: "Devoirs to do" },
-  { id: "grades", label: "Grades", hint: "Notes & moyennes" },
-  { id: "chat", label: "Chat", hint: "Ask Claude about school" },
-  { id: "settings", label: "Settings", hint: "Account, sync, backup" },
-];
 
 export function Layout({ active, onChange, children }: {
   active: View;
   onChange: (v: View) => void;
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { data: health } = useQuery({ queryKey: ["health"], queryFn: api.health });
   const sync = useMutation({
     mutationFn: api.triggerSync,
     onSuccess: () => {
-      // give the sync ~10s before refetching everything
       setTimeout(() => qc.invalidateQueries(), 10_000);
     },
   });
+
+  const tabs: { id: View; label: string; hint: string }[] = [
+    { id: "schedule", label: t("nav.schedule"), hint: t("nav.schedule_hint") },
+    { id: "homework", label: t("nav.homework"), hint: t("nav.homework_hint") },
+    { id: "grades", label: t("nav.grades"), hint: t("nav.grades_hint") },
+    { id: "chat", label: t("nav.chat"), hint: t("nav.chat_hint") },
+    { id: "settings", label: t("nav.settings"), hint: t("nav.settings_hint") },
+  ];
 
   const student = health?.student ?? {};
   const last = health?.last_sync;
@@ -39,23 +40,23 @@ export function Layout({ active, onChange, children }: {
             {student.name ?? "—"}
           </div>
           <div className="text-xs text-pap-muted truncate">
-            {student.class_name ? `Classe ${student.class_name}` : ""}
+            {student.class_name ? `${student.class_name}` : ""}
           </div>
         </div>
         <nav className="flex-1 px-2 py-3 space-y-1">
-          {tabs.map((t) => (
+          {tabs.map((tab) => (
             <button
-              key={t.id}
-              onClick={() => onChange(t.id)}
+              key={tab.id}
+              onClick={() => onChange(tab.id)}
               className={clsx(
                 "w-full text-left px-3 py-2 rounded-md transition-colors",
-                active === t.id
+                active === tab.id
                   ? "bg-pap-surface-2 text-pap-text"
                   : "text-pap-muted hover:bg-pap-surface-2/60 hover:text-pap-text",
               )}
             >
-              <div className="text-sm font-medium">{t.label}</div>
-              <div className="text-xs text-pap-muted">{t.hint}</div>
+              <div className="text-sm font-medium">{tab.label}</div>
+              <div className="text-xs text-pap-muted">{tab.hint}</div>
             </button>
           ))}
         </nav>
@@ -73,13 +74,14 @@ function SyncIndicator({
   pending,
   onSync,
 }: {
-  last: NonNullable<ReturnType<typeof Object>>;
+  last: any;
   pending: boolean;
   onSync: () => void;
 }) {
+  const { t } = useTranslation();
   const success = last?.success;
   const ts = last?.started_at;
-  const ago = ts ? timeAgo(new Date(ts)) : "never";
+  const ago = ts ? timeAgo(new Date(ts), t) : t("sidebar.never");
 
   return (
     <div>
@@ -90,23 +92,23 @@ function SyncIndicator({
             success === false ? "bg-pap-bad" : success ? "bg-pap-good" : "bg-pap-muted",
           )}
         />
-        <span>Last sync: {ago}</span>
+        <span>{t("sidebar.last_sync_label")} {ago}</span>
       </div>
       <button
         onClick={onSync}
         disabled={pending}
         className="mt-2 w-full px-2 py-1.5 rounded-md bg-pap-surface-2 hover:bg-pap-border text-pap-text text-xs disabled:opacity-50"
       >
-        {pending ? "Syncing…" : "Sync now"}
+        {pending ? t("sidebar.syncing") : t("sidebar.sync_now")}
       </button>
     </div>
   );
 }
 
-function timeAgo(d: Date): string {
+function timeAgo(d: Date, t: (k: string, opts?: any) => string): string {
   const s = (Date.now() - d.getTime()) / 1000;
-  if (s < 60) return `${Math.floor(s)}s ago`;
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return `${Math.floor(s / 86400)}d ago`;
+  if (s < 60) return t("sidebar.ago_seconds", { n: Math.floor(s) });
+  if (s < 3600) return t("sidebar.ago_minutes", { n: Math.floor(s / 60) });
+  if (s < 86400) return t("sidebar.ago_hours", { n: Math.floor(s / 3600) });
+  return t("sidebar.ago_days", { n: Math.floor(s / 86400) });
 }

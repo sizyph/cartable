@@ -1,15 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { addDays, format, parseISO, startOfWeek } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { api, Homework } from "../api";
+import { dateFnsLocale } from "../i18n";
 import clsx from "clsx";
 
 type Window = "current" | "next" | "overdue" | "later";
 
 export function HomeworkView() {
+  const { t } = useTranslation();
+  const locale = dateFnsLocale();
   const [window, setWindow] = useState<Window>("current");
 
-  // Pull a wide range once; we group/filter client-side.
   const { from, to } = useMemo(() => {
     const today = new Date();
     const start = addDays(today, -30);
@@ -40,13 +43,11 @@ export function HomeworkView() {
         const nextSun = format(addDays(monday, 13), "yyyy-MM-dd");
         return due >= nextMon && due <= nextSun;
       }
-      // later: anything beyond next week, not done
       const nextSun = format(addDays(monday, 13), "yyyy-MM-dd");
       return due > nextSun && !h.done;
     });
   }, [items, window, monday, today]);
 
-  // dedupe — Pronote sometimes returns duplicate homework per group.
   const deduped = useMemo(() => {
     const seen = new Set<string>();
     return filtered.filter((h) => {
@@ -57,7 +58,6 @@ export function HomeworkView() {
     });
   }, [filtered]);
 
-  // group by due_date
   const grouped = useMemo(() => {
     const m = new Map<string, Homework[]>();
     for (const h of deduped) {
@@ -77,11 +77,15 @@ export function HomeworkView() {
     <div className="p-8 max-w-6xl mx-auto">
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Homework</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("homework.title")}</h1>
           <p className="text-sm text-pap-muted">
-            {windowLabel(window, monday)} ·{" "}
-            <span className="text-pap-text">{stats.pending}</span> pending /{" "}
-            {stats.total} total
+            {windowLabel(window, monday, t, locale)} ·{" "}
+            <span className="text-pap-text">
+              {t("homework.pending_of_total", {
+                pending: stats.pending,
+                total: stats.total,
+              })}
+            </span>
           </p>
         </div>
         <div className="flex gap-1 bg-pap-surface rounded-md p-1">
@@ -90,22 +94,22 @@ export function HomeworkView() {
               key={w}
               onClick={() => setWindow(w)}
               className={clsx(
-                "px-3 py-1 text-sm rounded transition-colors capitalize",
+                "px-3 py-1 text-sm rounded transition-colors",
                 window === w
                   ? "bg-pap-surface-2 text-pap-text"
                   : "text-pap-muted hover:text-pap-text hover:bg-pap-surface-2/60",
               )}
             >
-              {w === "current" ? "This week" : w === "next" ? "Next week" : w}
+              {t(`homework.window.${w}`)}
             </button>
           ))}
         </div>
       </header>
 
       {isLoading ? (
-        <p className="text-pap-muted">Loading…</p>
+        <p className="text-pap-muted">{t("common.loading")}</p>
       ) : grouped.length === 0 ? (
-        <p className="text-pap-muted italic">Nothing in this window.</p>
+        <p className="text-pap-muted italic">{t("homework.empty")}</p>
       ) : (
         <div className="space-y-6">
           {grouped.map(([day, list]) => (
@@ -117,11 +121,22 @@ export function HomeworkView() {
   );
 }
 
-function windowLabel(w: Window, monday: Date): string {
-  if (w === "current") return `Week of ${format(monday, "EEEE d MMMM")}`;
-  if (w === "next") return `Week of ${format(addDays(monday, 7), "EEEE d MMMM")}`;
-  if (w === "overdue") return "Past due, still pending";
-  return "Later this term";
+function windowLabel(
+  w: Window,
+  monday: Date,
+  t: (k: string, opts?: any) => string,
+  locale: any,
+): string {
+  if (w === "current")
+    return t("homework.window.current_label", {
+      date: format(monday, "EEEE d MMMM", { locale }),
+    });
+  if (w === "next")
+    return t("homework.window.next_label", {
+      date: format(addDays(monday, 7), "EEEE d MMMM", { locale }),
+    });
+  if (w === "overdue") return t("homework.window.overdue_label");
+  return t("homework.window.later_label");
 }
 
 function DayGroup({
@@ -133,6 +148,8 @@ function DayGroup({
   items: Homework[];
   today: Date;
 }) {
+  const { t } = useTranslation();
+  const locale = dateFnsLocale();
   if (!day) return null;
   const d = parseISO(day);
   const isToday = format(today, "yyyy-MM-dd") === day;
@@ -147,13 +164,13 @@ function DayGroup({
             isToday ? "text-pap-accent" : isPast ? "text-pap-bad" : "text-pap-text",
           )}
         >
-          {format(d, "EEEE d MMMM")}
+          {format(d, "EEEE d MMMM", { locale })}
         </h2>
         <span className="text-xs text-pap-muted">
-          {isToday ? "today" : daysFromToday(d, today)}
+          {isToday ? t("common.today") : daysFromToday(d, today, t)}
         </span>
         <span className="text-xs text-pap-muted ml-auto">
-          {items.length} item{items.length > 1 ? "s" : ""}
+          {t("homework.items", { count: items.length })}
         </span>
       </header>
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -166,6 +183,7 @@ function DayGroup({
 }
 
 function HomeworkCard({ h }: { h: Homework }) {
+  const { t } = useTranslation();
   return (
     <li
       className={clsx(
@@ -179,9 +197,7 @@ function HomeworkCard({ h }: { h: Homework }) {
         aria-hidden
         className={clsx(
           "shrink-0 w-4 h-4 rounded-sm border mt-0.5",
-          h.done
-            ? "bg-pap-good border-pap-good"
-            : "border-pap-muted bg-transparent",
+          h.done ? "bg-pap-good border-pap-good" : "border-pap-muted bg-transparent",
         )}
       />
       <div className="min-w-0 flex-1">
@@ -189,7 +205,7 @@ function HomeworkCard({ h }: { h: Homework }) {
           {h.subject_name ?? "—"}
         </div>
         <div className="text-pap-muted whitespace-pre-wrap break-words text-xs leading-relaxed mt-0.5">
-          {(h.description ?? "").trim() || <em>(no description)</em>}
+          {(h.description ?? "").trim() || <em>{t("homework.no_description")}</em>}
         </div>
         {h.files && h.files.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
@@ -211,12 +227,12 @@ function HomeworkCard({ h }: { h: Homework }) {
   );
 }
 
-function daysFromToday(d: Date, today: Date): string {
+function daysFromToday(d: Date, today: Date, t: (k: string, opts?: any) => string): string {
   const ms = d.getTime() - new Date(today.toDateString()).getTime();
   const days = Math.round(ms / (1000 * 60 * 60 * 24));
-  if (days === 0) return "today";
-  if (days === 1) return "tomorrow";
-  if (days === -1) return "yesterday";
-  if (days > 0) return `in ${days} days`;
-  return `${Math.abs(days)} days ago`;
+  if (days === 0) return t("common.today");
+  if (days === 1) return t("common.tomorrow");
+  if (days === -1) return t("common.yesterday");
+  if (days > 0) return t("common.in_days", { count: days });
+  return t("common.days_ago", { count: Math.abs(days) });
 }

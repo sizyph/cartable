@@ -13,11 +13,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 import { api, Average, Grade, TrendPoint } from "../api";
 import { fmtDate, fmtGrade, tone, toneClass } from "../lib/format";
 import clsx from "clsx";
 
 export function GradesDashboard() {
+  const { t } = useTranslation();
   const periods = useQuery({ queryKey: ["periods"], queryFn: api.periods });
   const averages = useQuery({ queryKey: ["averages"], queryFn: () => api.averages() });
   const recent = useQuery({ queryKey: ["grades", "recent"], queryFn: () => api.gradesRecent(30) });
@@ -29,31 +32,31 @@ export function GradesDashboard() {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Grades</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("grades.title")}</h1>
         <p className="text-sm text-pap-muted">
-          {current ? `Current period: ${current.name}` : "—"}
+          {current ? t("grades.current_period", { name: current.name }) : "—"}
         </p>
       </header>
 
       <section className="grid grid-cols-2 gap-6">
-        <Card title="Subject averages (current period)" subtitle="Student vs class">
+        <Card title={t("grades.card.subject_averages")} subtitle={t("grades.card.subject_averages_sub")}>
           {averages.data ? <AveragesChart data={averages.data} /> : <Skel />}
         </Card>
-        <Card title="Trend across periods" subtitle="Student average per subject, /20 normalised">
+        <Card title={t("grades.card.trend")} subtitle={t("grades.card.trend_sub")}>
           {trend.data ? <TrendChart data={trend.data} /> : <Skel />}
         </Card>
       </section>
 
       <section className="grid grid-cols-2 gap-6">
-        <Card title="Subject leaderboard" subtitle="Sorted by gap to class">
+        <Card title={t("grades.card.leaderboard")} subtitle={t("grades.card.leaderboard_sub")}>
           {averages.data ? <AveragesTable data={averages.data} /> : <Skel />}
         </Card>
-        <Card title="Recent grades" subtitle="Newest first, deduplicated">
+        <Card title={t("grades.card.recent_grades")} subtitle={t("grades.card.recent_grades_sub")}>
           {recent.data ? <RecentGrades data={recent.data} /> : <Skel />}
         </Card>
       </section>
 
-      <Card title="Bulletins de notes" subtitle="Published report cards — click to print or save as PDF">
+      <Card title={t("grades.card.bulletins")} subtitle={t("grades.card.bulletins_sub")}>
         {bulletins.data ? <BulletinsList data={bulletins.data} /> : <Skel />}
       </Card>
     </div>
@@ -84,6 +87,11 @@ function Skel() {
   return <div className="h-48 rounded bg-pap-surface-2/40 animate-pulse" />;
 }
 
+// Recharts reads chart-element `name` prop synchronously, outside the
+// React render tree it cares about for hooks — so we resolve via i18next
+// directly instead of `useTranslation()`.
+const tStatic = (key: string): string => i18n.t(key);
+
 function AveragesChart({ data }: { data: Average[] }) {
   const rows = data
     .filter((a) => a.student != null)
@@ -103,8 +111,8 @@ function AveragesChart({ data }: { data: Average[] }) {
         <YAxis dataKey="subject" type="category" width={130} tick={tickStyle} stroke="#8e94a7" />
         <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#1f2330" }} />
         <Legend wrapperStyle={{ color: "#8e94a7", fontSize: 12 }} />
-        <Bar dataKey="class" name="Class" fill="#3a4055" radius={[3, 3, 3, 3]} />
-        <Bar dataKey="student" name="Student" fill="#7c9cff" radius={[3, 3, 3, 3]}>
+        <Bar dataKey="class" name={tStatic("grades.table.class")} fill="#3a4055" radius={[3, 3, 3, 3]} />
+        <Bar dataKey="student" name={tStatic("grades.table.student")} fill="#7c9cff" radius={[3, 3, 3, 3]}>
           {rows.map((r, i) => (
             <Cell key={i} fill={barColor(r.student, r.out_of)} />
           ))}
@@ -132,7 +140,7 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
   }, [data]);
 
   if (subjects.length === 0) {
-    return <p className="text-sm text-pap-muted">Need at least 2 periods of data to plot a trend.</p>;
+    return <TrendEmpty />;
   }
 
   // build a wide table: { period: "T1", MATH: 14, ENG: 15, ... }
@@ -175,7 +183,13 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
   );
 }
 
+function TrendEmpty() {
+  const { t } = useTranslation();
+  return <p className="text-sm text-pap-muted">{t("grades.trend_need_2_periods")}</p>;
+}
+
 function AveragesTable({ data }: { data: Average[] }) {
+  const { t } = useTranslation();
   const rows = data
     .filter((a) => a.student != null && a.class_average != null)
     .map((a) => ({
@@ -187,10 +201,10 @@ function AveragesTable({ data }: { data: Average[] }) {
   return (
     <div className="text-sm">
       <div className="grid grid-cols-[1fr,auto,auto,auto] gap-x-4 px-2 py-1 text-xs uppercase tracking-wide text-pap-muted border-b border-pap-border">
-        <span>Subject</span>
-        <span className="text-right">Student</span>
-        <span className="text-right">Class</span>
-        <span className="text-right">Gap</span>
+        <span>{t("grades.table.subject")}</span>
+        <span className="text-right">{t("grades.table.student")}</span>
+        <span className="text-right">{t("grades.table.class")}</span>
+        <span className="text-right">{t("grades.table.gap")}</span>
       </div>
       <ul className="divide-y divide-pap-border">
         {rows.map((r) => (
@@ -266,12 +280,9 @@ function BulletinsList({
 }: {
   data: { period_id: string; period_name: string; start_date: string | null; end_date: string | null; global_comments: string[] }[];
 }) {
+  const { t } = useTranslation();
   if (data.length === 0) {
-    return (
-      <p className="text-sm text-pap-muted italic">
-        No published bulletin yet for any synced period. They appear here once teachers finalise comments and averages.
-      </p>
-    );
+    return <p className="text-sm text-pap-muted italic">{t("grades.no_bulletins")}</p>;
   }
   return (
     <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -299,7 +310,7 @@ function BulletinsList({
             rel="noreferrer"
             className="mt-auto self-start text-xs px-3 py-1 rounded bg-pap-accent text-pap-bg font-medium hover:bg-pap-accent/85"
           >
-            Open / Print PDF
+            {t("grades.open_bulletin")}
           </a>
         </li>
       ))}

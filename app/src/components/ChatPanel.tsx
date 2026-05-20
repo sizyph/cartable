@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 
 type ToolUse = { name: string; input?: string };
@@ -13,14 +14,9 @@ type ChatMessage =
 
 let nextId = 1;
 
-const STARTER_PROMPTS = [
-  "What's important today?",
-  "How is the maths grade trending this term vs the previous one?",
-  "List homework due in the next 7 days.",
-  "Anything that warrants contacting a teacher?",
-];
-
 export function ChatPanel() {
+  const { t } = useTranslation();
+  const starterPrompts = t("chat.starters", { returnObjects: true }) as string[];
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -114,19 +110,23 @@ export function ChatPanel() {
   return (
     <div className="flex flex-col h-full">
       <header className="px-8 py-5 border-b border-pap-border">
-        <h1 className="text-2xl font-semibold tracking-tight">Chat</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("chat.title")}</h1>
         <p className="text-sm text-pap-muted">
-          Ask Claude about the school data. The cartable skill is loaded.
-          {sessionId && <span className="ml-2 opacity-60">session #{sessionId.slice(0, 8)}</span>}
+          {t("chat.subtitle")}
+          {sessionId && (
+            <span className="ml-2 opacity-60">
+              {t("chat.session_id", { id: sessionId.slice(0, 8) })}
+            </span>
+          )}
         </p>
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-8 py-6 space-y-4">
         {messages.length === 0 && (
           <div className="max-w-2xl mx-auto mt-12">
-            <p className="text-pap-muted mb-4 text-sm">Try one of these:</p>
+            <p className="text-pap-muted mb-4 text-sm">{t("chat.try_one")}</p>
             <div className="grid grid-cols-2 gap-2">
-              {STARTER_PROMPTS.map((p) => (
+              {starterPrompts.map((p) => (
                 <button
                   key={p}
                   onClick={() => send(p)}
@@ -154,7 +154,7 @@ export function ChatPanel() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={streaming ? "Claude is thinking…" : "Ask about grades, schedule, teachers…"}
+            placeholder={streaming ? t("chat.thinking") : t("chat.placeholder")}
             disabled={streaming}
             ref={inputRef}
             className="flex-1 bg-pap-surface border border-pap-border rounded-md px-3 py-2 text-sm placeholder-pap-muted focus:outline-none focus:border-pap-accent disabled:opacity-50"
@@ -170,7 +170,7 @@ export function ChatPanel() {
             disabled={streaming || !input.trim()}
             className="px-4 py-2 rounded-md bg-pap-accent text-pap-bg text-sm font-medium disabled:opacity-40"
           >
-            Send
+            {t("chat.send")}
           </button>
         </form>
       </div>
@@ -187,18 +187,14 @@ export function ChatPanel() {
  * keyboard focus.
  */
 function MicButton({ disabled, onActivate }: { disabled?: boolean; onActivate: () => void }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       onClick={onActivate}
       disabled={disabled}
-      title={
-        "Focus the input, then start your dictation tool:\n" +
-        "  • Superwhisper / Whisper Flow — your configured hotkey\n" +
-        "  • macOS — System Settings → Keyboard → Dictation, then press the hotkey (default: press Fn twice)\n" +
-        "Anything typed by your dictation tool will land here."
-      }
-      aria-label="Voice input — focus chat for dictation"
+      title={t("chat.voice_button_title")}
+      aria-label="Voice input"
       className="px-3 py-2 rounded-md bg-pap-surface border border-pap-border text-pap-muted hover:text-pap-text hover:bg-pap-surface-2 disabled:opacity-40"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

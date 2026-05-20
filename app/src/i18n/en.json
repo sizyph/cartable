@@ -1,0 +1,221 @@
+{
+  "lang": { "name": "English" },
+  "nav": {
+    "schedule": "Schedule",
+    "schedule_hint": "Lessons & exams",
+    "homework": "Homework",
+    "homework_hint": "Devoirs to do",
+    "grades": "Grades",
+    "grades_hint": "Notes & averages",
+    "chat": "Chat",
+    "chat_hint": "Ask Claude about school",
+    "settings": "Settings",
+    "settings_hint": "Account, sync, backup"
+  },
+  "common": {
+    "today": "Today",
+    "tomorrow": "tomorrow",
+    "yesterday": "yesterday",
+    "in_days_one": "in {{count}} day",
+    "in_days_other": "in {{count}} days",
+    "days_ago_one": "{{count}} day ago",
+    "days_ago_other": "{{count}} days ago",
+    "loading": "Loading…",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "connect": "Connect",
+    "ok": "OK"
+  },
+  "sidebar": {
+    "last_sync_label": "Last sync:",
+    "never": "never",
+    "sync_now": "Sync now",
+    "syncing": "Syncing…",
+    "ago_seconds": "{{n}}s ago",
+    "ago_minutes": "{{n}}m ago",
+    "ago_hours": "{{n}}h ago",
+    "ago_days": "{{n}}d ago"
+  },
+  "schedule": {
+    "title": "Schedule",
+    "week_of": "Week of {{date}}",
+    "no_lessons": "no lessons",
+    "test_tag": "test",
+    "google_calendar_setup_needed": "Google Calendar — needs one-time setup",
+    "google_calendar_setup_intro": "To enable the 2-week calendar sync, drop your Google OAuth Desktop credentials at:",
+    "google_calendar_setup_outro": "(Create a project at console.cloud.google.com, enable the Calendar API, create an OAuth 2.0 Client of type \"Desktop\", download the JSON.)",
+    "loading_status": "Loading calendar status…",
+    "connect_google_calendar": "Connect Google Calendar",
+    "opening_browser": "Opening browser…",
+    "sync_2_weeks": "Sync 2 weeks to Google Calendar",
+    "syncing_calendar": "Pushing 2 weeks…"
+  },
+  "homework": {
+    "title": "Homework",
+    "window": {
+      "current": "This week",
+      "next": "Next week",
+      "later": "Later",
+      "overdue": "Overdue",
+      "current_label": "Week of {{date}}",
+      "next_label": "Week of {{date}}",
+      "overdue_label": "Past due, still pending",
+      "later_label": "Later this term"
+    },
+    "pending_of_total": "{{pending}} pending / {{total}} total",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items",
+    "empty": "Nothing in this window.",
+    "no_description": "(no description)"
+  },
+  "grades": {
+    "title": "Grades",
+    "current_period": "Current period: {{name}}",
+    "card": {
+      "subject_averages": "Subject averages (current period)",
+      "subject_averages_sub": "Student vs class",
+      "trend": "Trend across periods",
+      "trend_sub": "Student average per subject, /20 normalised",
+      "leaderboard": "Subject leaderboard",
+      "leaderboard_sub": "Sorted by gap to class",
+      "recent_grades": "Recent grades",
+      "recent_grades_sub": "Newest first, deduplicated",
+      "bulletins": "Bulletins de notes",
+      "bulletins_sub": "Published report cards — click to print or save as PDF"
+    },
+    "table": {
+      "subject": "Subject",
+      "student": "Student",
+      "class": "Class",
+      "gap": "Gap"
+    },
+    "trend_need_2_periods": "Need at least 2 periods of data to plot a trend.",
+    "no_bulletins": "No published bulletin yet for any synced period. They appear here once teachers finalise comments and averages.",
+    "open_bulletin": "Open / Print PDF"
+  },
+  "chat": {
+    "title": "Chat",
+    "subtitle": "Ask Claude about the school data. The cartable skill is loaded.",
+    "session_id": "session #{{id}}",
+    "try_one": "Try one of these:",
+    "placeholder": "Ask about grades, schedule, teachers…",
+    "thinking": "Claude is thinking…",
+    "send": "Send",
+    "starters": [
+      "What's important today?",
+      "How is the maths grade trending this term vs the previous one?",
+      "List homework due in the next 7 days.",
+      "Anything that warrants contacting a teacher?"
+    ],
+    "voice_button_title": "Focus the input, then start your dictation tool:\n  • Superwhisper / Whisper Flow — your configured hotkey\n  • macOS — System Settings → Keyboard → Dictation, then press the hotkey (default: press Fn twice)\nAnything typed by your dictation tool will land here."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Account, sync, backup, app version.",
+    "account": {
+      "title": "Account",
+      "student": "Student",
+      "pronote_url": "Pronote URL",
+      "username": "Username",
+      "auth_mode": "Auth mode",
+      "ent_provider": "ENT provider",
+      "child": "Child",
+      "password": "Password",
+      "password_stored": "•••••••••• (stored locally)",
+      "password_not_set": "(not set)",
+      "edit": "Edit credentials",
+      "logout": "Log out",
+      "logging_out": "Logging out…",
+      "logout_confirm": "Wipe Pronote credentials and the auth token? The synced database stays intact.",
+      "form": {
+        "auth_password": "password (direct)",
+        "auth_ent": "ent (school portal)",
+        "password_placeholder_keep": "•••••• (leave blank to keep current)",
+        "password_placeholder_new": "Enter password",
+        "child_placeholder": "exact name as Pronote displays it",
+        "ent_placeholder": "ac_rennes, ent_hdf, ile_de_france, …"
+      }
+    },
+    "autosync": {
+      "title": "Auto-sync",
+      "subtitle": "A launchd job refreshes the local database in the background.",
+      "running": "Running",
+      "stopped": "Stopped",
+      "plist_target": "Plist target: {{path}}",
+      "template_missing": "Template missing — reinstall the project.",
+      "interval": "Interval",
+      "presets": {
+        "15min": "15 min",
+        "30min": "30 min",
+        "1hour": "1 hour",
+        "2hours": "2 hours",
+        "6hours": "6 hours"
+      }
+    },
+    "backup": {
+      "title": "Backup & restore",
+      "subtitle": "Pack the local database into a portable .cartable archive. Credentials are NOT included.",
+      "download": "Download .cartable",
+      "restore": "Restore from .cartable…",
+      "restoring": "Restoring…",
+      "restored": "Restored. {{grades}} grades, {{lessons}} lessons. Reloading…",
+      "restore_failed": "Restore failed: {{error}}"
+    },
+    "about": {
+      "title": "About",
+      "version": "Version",
+      "data_dir": "Data dir",
+      "cartable_dir": "Cartable dir",
+      "language": "Language",
+      "check_updates": "Check for updates",
+      "checking": "Checking…",
+      "update_available": "Update available: v{{version}}",
+      "release_notes": "Release notes ↗",
+      "up_to_date": "Up to date (latest: v{{version}})",
+      "no_releases": "No releases published yet."
+    }
+  },
+  "welcome": {
+    "title": "Welcome to Cartable",
+    "intro": "Cartable mirrors your child's Pronote account into a local SQLite database, so this Mac app can show grades, homework, the weekly schedule, published bulletins, and a Claude-powered chat — all <0>without sending anything off your machine</0>. First, let's connect to Pronote.",
+    "choice_qr": "Scan QR from Pronote mobile",
+    "choice_qr_sub": "Open Pronote on your phone → Mon compte → Connecter un nouvel appareil. Pick a 4-digit code, then drop the QR screenshot here.",
+    "choice_manual": "Enter URL + credentials",
+    "choice_manual_sub": "You'll need the Pronote URL (eleve.html or parent.html) plus the username and password you use on the web.",
+    "manual": {
+      "title": "Manual login",
+      "url": "Pronote URL",
+      "auth_mode": "Auth mode",
+      "ent_provider": "ENT provider",
+      "username": "Username",
+      "password": "Password",
+      "child": "Child (parents only, optional)",
+      "stored_locally": "Stored locally at <0>~/Documents/Claude/cartable/.env</0>. Never transmitted anywhere except Pronote itself."
+    },
+    "qr": {
+      "title": "QR-code login",
+      "step_1": "On Pronote mobile: <0>Compte → Connecter un nouvel appareil</0>.",
+      "step_2": "Choose a 4-digit code (you'll enter it here).",
+      "step_3": "Either take a screenshot of the QR and drop it below, or paste the JSON contained in the QR if you have it.",
+      "from_screenshot": "From a QR screenshot",
+      "pick_image": "Pick a PNG / JPG…",
+      "paste_json": "Or paste the QR JSON",
+      "use_json": "Use this JSON",
+      "decoded": "QR decoded.",
+      "decoded_url": "URL: {{url}}",
+      "decoded_login": "Login: {{login}}",
+      "pin_label": "4-digit PIN you set on the phone",
+      "pin_placeholder": "0000",
+      "connecting": "Talking to Pronote…",
+      "error_no_qr": "No QR code found in this image.",
+      "error_bad_payload": "QR decoded, but it doesn't look like a Pronote login code (missing login/jeton/url).",
+      "error_bad_json": "Invalid JSON: {{error}}"
+    }
+  },
+  "boot": {
+    "starting": "Starting up…",
+    "waiting_backend": "Waiting for the local backend…"
+  }
+}
