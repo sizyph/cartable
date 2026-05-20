@@ -11,13 +11,26 @@ async function get<T>(path: string): Promise<T> {
   return (await r.json()) as T;
 }
 
-async function post<T>(path: string, body?: unknown): Promise<T> {
+async function post<T>(
+  path: string,
+  body?: unknown,
+  method: "POST" | "PUT" | "DELETE" = "POST",
+): Promise<T> {
   const r = await fetch(`${base}${path}`, {
-    method: "POST",
-    headers: body ? { "content-type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
+    method,
+    headers: body !== undefined ? { "content-type": "application/json" } : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
   });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText} on ${path}`);
+  if (!r.ok) {
+    let detail = `${r.status} ${r.statusText}`;
+    try {
+      const d = await r.json();
+      if (d?.detail) detail = String(d.detail);
+    } catch {
+      /* ignore */
+    }
+    throw new Error(detail);
+  }
   return (await r.json()) as T;
 }
 
@@ -239,4 +252,82 @@ export const api = {
     if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
     return (await r.json()) as { ok: boolean; manifest: any; restored_to: string };
   },
+
+  // ---- library -----------------------------------------------------------
+  libraryItems: () => get<LibraryItem[]>("/api/library/items"),
+  libraryItemCreate: (body: LibraryItemInput) =>
+    post<{ id: string; ok: boolean }>("/api/library/items", body),
+  libraryItemUpdate: (numericId: number, body: LibraryItemInput) =>
+    post<{ ok: boolean }>(`/api/library/items/${numericId}`, body, "PUT"),
+  libraryItemDelete: (numericId: number) =>
+    post<{ ok: boolean }>(`/api/library/items/${numericId}`, undefined, "DELETE"),
+  libraryFiles: () => get<{ dir: string; items: LibraryItem[] }>("/api/library/files"),
+  libraryFileUrl: (relativePath: string) =>
+    `${base}/api/library/file?path=${encodeURIComponent(relativePath)}`,
+
+  // ---- drive -------------------------------------------------------------
+  driveStatus: () =>
+    get<{
+      has_credentials: boolean;
+      has_token: boolean;
+      scopes_ok: boolean;
+      credentials_path: string;
+      root_folder_id: string | null;
+      root_folder_name: string | null;
+    }>("/api/drive/status"),
+  driveAuthorize: () => post<{ ok: boolean; scopes: string[] }>("/api/drive/authorize"),
+  driveSetRoot: (folderId: string) =>
+    post<{ ok: boolean; id: string; name: string }>("/api/drive/root", { folder_id: folderId }),
+  driveList: (folderId?: string) =>
+    get<{ items: DriveFile[] }>(`/api/drive/list${folderId ? `?folder_id=${encodeURIComponent(folderId)}` : ""}`),
+  driveSearch: (q: string) =>
+    get<{ items: DriveFile[] }>(`/api/drive/search?q=${encodeURIComponent(q)}`),
+  driveUploadBackup: () =>
+    post<{
+      ok: boolean;
+      id: string;
+      name: string;
+      size: string;
+      web_view_link: string;
+      uploaded_at: string;
+    }>("/api/drive/upload-backup"),
+};
+
+export type LibraryItem = {
+  id: string;
+  title: string;
+  author: string | null;
+  subject: string | null;
+  kind: "textbook" | "companion" | "reference";
+  url: string | null;
+  file_path: string | null;
+  notes: string | null;
+  cover_url: string | null;
+  added_at: string;
+  updated_at: string;
+  source: "manual" | "file";
+  size_bytes?: number;
+};
+
+export type LibraryItemInput = {
+  title: string;
+  author?: string;
+  subject?: string;
+  kind?: "textbook" | "companion" | "reference";
+  url?: string;
+  file_path?: string;
+  notes?: string;
+  cover_url?: string;
+};
+
+export type DriveFile = {
+  id: string;
+  name: string;
+  mimeType: string;
+  is_folder: boolean;
+  modifiedTime?: string;
+  size?: string;
+  webViewLink?: string;
+  iconLink?: string;
+  parents?: string[];
 };

@@ -22,17 +22,13 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from . import db
+from . import db, google_auth
 
 log = logging.getLogger("cartable_app.calendar")
 
-SCOPES = ["https://www.googleapis.com/auth/calendar"]
 DEFAULT_CALENDAR_NAME = "Pronote — Cartable"
 DEFAULT_LOOKAHEAD_DAYS = 14
 EVENT_ID_PREFIX = "cartable"
@@ -73,64 +69,24 @@ def _timezone() -> str:
     return "UTC"
 
 
-def _data_dir() -> Path:
-    """Where we keep credentials/token. macOS-friendly, gitignored on the user side."""
-    if os.environ.get("CARTABLE_APP_CONFIG_DIR"):
-        return Path(os.environ["CARTABLE_APP_CONFIG_DIR"]).expanduser()
-    return Path.home() / "Library" / "Application Support" / "Cartable"
-
-
-def _credentials_path() -> Path:
-    return _data_dir() / "google_credentials.json"
-
-
-def _token_path() -> Path:
-    return _data_dir() / "google_token.json"
-
-
 def status() -> dict[str, Any]:
+    creds = google_auth.load_creds()
     return {
-        "has_credentials": _credentials_path().exists(),
-        "has_token": _token_path().exists(),
-        "credentials_path": str(_credentials_path()),
+        "has_credentials": google_auth.credentials_path().exists(),
+        "has_token": google_auth.token_path().exists(),
+        "credentials_path": str(google_auth.credentials_path()),
         "calendar_name": _calendar_name(),
+        "scopes_ok": google_auth.has_all_scopes(creds),
     }
-
-
-def _load_creds() -> Credentials | None:
-    token_path = _token_path()
-    if not token_path.exists():
-        return None
-    creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
-    if creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-        _save_creds(creds)
-    return creds
-
-
-def _save_creds(creds: Credentials) -> None:
-    data_dir = _data_dir()
-    data_dir.mkdir(parents=True, exist_ok=True)
-    p = _token_path()
-    p.write_text(creds.to_json())
-    os.chmod(p, 0o600)
 
 
 def authorize() -> dict[str, Any]:
     """Run the OAuth flow — opens the user's browser, blocks until they consent."""
-    if not _credentials_path().exists():
-        raise FileNotFoundError(
-            f"Missing OAuth credentials at {_credentials_path()}. "
-            "Create a Desktop OAuth client in Google Cloud and save the JSON there."
-        )
-    flow = InstalledAppFlow.from_client_secrets_file(str(_credentials_path()), SCOPES)
-    creds = flow.run_local_server(port=0, open_browser=True)
-    _save_creds(creds)
-    return {"ok": True, "scopes": list(creds.scopes or [])}
+    return google_auth.authorize()
 
 
 def _service():
-    creds = _load_creds()
+    creds = google_auth.load_creds()
     if not creds or not creds.valid:
         raise RuntimeError("Not authorized. Run /api/calendar/authorize first.")
     return build("calendar", "v3", credentials=creds, cache_discovery=False)

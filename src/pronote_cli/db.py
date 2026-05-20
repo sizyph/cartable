@@ -171,6 +171,23 @@ CREATE TABLE IF NOT EXISTS bulletin_subjects (
     PRIMARY KEY (period_id, subject_name)
 );
 
+-- Library: user-curated entries (textbooks, companion books, references).
+-- Local PDFs dropped under data/library/ are surfaced separately by the
+-- backend (a directory listing), not from this table.
+CREATE TABLE IF NOT EXISTS library_items (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    title      TEXT NOT NULL,
+    author     TEXT,
+    subject    TEXT,
+    kind       TEXT NOT NULL DEFAULT 'reference',  -- 'textbook' | 'companion' | 'reference'
+    url        TEXT,
+    file_path  TEXT,    -- relative to data/library/
+    notes      TEXT,
+    cover_url  TEXT,
+    added_at   TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS sync_log (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     started_at  TEXT NOT NULL,

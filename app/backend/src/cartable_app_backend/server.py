@@ -12,10 +12,18 @@ from typing import Any
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
-from . import agent, bulletin_html, calendar_sync, db, settings as settings_mod
+from . import (
+    agent,
+    bulletin_html,
+    calendar_sync,
+    db,
+    drive as drive_mod,
+    library,
+    settings as settings_mod,
+)
 
 log = logging.getLogger("cartable_app")
 app = FastAPI(title="Cartable", version="0.1.0")
@@ -70,6 +78,21 @@ class AutoSyncRequest(BaseModel):
 class QrLoginRequest(BaseModel):
     qr_data: dict[str, Any]
     pin: str
+
+
+class LibraryItemBody(BaseModel):
+    title: str
+    author: str = ""
+    subject: str = ""
+    kind: str = "reference"
+    url: str = ""
+    file_path: str = ""
+    notes: str = ""
+    cover_url: str = ""
+
+
+class DriveRootBody(BaseModel):
+    folder_id: str
 
 
 # ---------- read-only endpoints ---------------------------------------------
@@ -276,6 +299,111 @@ async def settings_restore(file: UploadFile = File(...)) -> dict:
     try:
         return settings_mod.restore_backup(content)
     except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+# ---------- library ---------------------------------------------------------
+
+
+@app.get("/api/library/items")
+def library_items() -> list[dict]:
+    return library.list_items()
+
+
+@app.post("/api/library/items")
+def library_items_create(body: LibraryItemBody) -> dict:
+    try:
+        return library.create_item(body.model_dump())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.put("/api/library/items/{item_id}")
+def library_items_update(item_id: int, body: LibraryItemBody) -> dict:
+    try:
+        return library.update_item(item_id, body.model_dump())
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.delete("/api/library/items/{item_id}")
+def library_items_delete(item_id: int) -> dict:
+    try:
+        return library.delete_item(item_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@app.get("/api/library/files")
+def library_files() -> dict:
+    return {
+        "dir": library.library_dir_path(),
+        "items": library.list_local_files(),
+    }
+
+
+@app.get("/api/library/file")
+def library_file(path: str) -> FileResponse:
+    try:
+        resolved, media = library.serve_file(path)
+    except (FileNotFoundError, PermissionError) as exc:
+        raise HTTPException(404, str(exc)) from exc
+    return FileResponse(resolved, media_type=media, filename=resolved.name)
+
+
+# ---------- drive -----------------------------------------------------------
+
+
+@app.get("/api/drive/status")
+def drive_status() -> dict:
+    return drive_mod.status()
+
+
+@app.post("/api/drive/authorize")
+async def drive_authorize() -> dict:
+    try:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, drive_mod.authorize)
+    except FileNotFoundError as exc:
+        raise HTTPException(412, str(exc)) from exc
+
+
+@app.post("/api/drive/root")
+def drive_set_root(body: DriveRootBody) -> dict:
+    try:
+        return drive_mod.set_root(body.folder_id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(412, str(exc)) from exc
+
+
+@app.get("/api/drive/list")
+def drive_list(folder_id: str | None = None) -> dict:
+    try:
+        return {"items": drive_mod.list_folder(folder_id)}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(412, str(exc)) from exc
+
+
+@app.get("/api/drive/search")
+def drive_search(q: str) -> dict:
+    try:
+        return {"items": drive_mod.search(q)}
+    except RuntimeError as exc:
+        raise HTTPException(412, str(exc)) from exc
+
+
+@app.post("/api/drive/upload-backup")
+async def drive_upload_backup() -> dict:
+    loop = asyncio.get_running_loop()
+    try:
+        return await loop.run_in_executor(None, drive_mod.upload_backup)
+    except (ValueError, RuntimeError) as exc:
         raise HTTPException(400, str(exc)) from exc
 
 

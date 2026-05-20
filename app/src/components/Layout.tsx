@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import clsx from "clsx";
 
-type View = "schedule" | "homework" | "grades" | "chat" | "settings";
+type View = "schedule" | "homework" | "grades" | "library" | "drive" | "chat" | "settings";
 
 export function Layout({ active, onChange, children }: {
   active: View;
@@ -24,6 +24,8 @@ export function Layout({ active, onChange, children }: {
     { id: "schedule", label: t("nav.schedule"), hint: t("nav.schedule_hint") },
     { id: "homework", label: t("nav.homework"), hint: t("nav.homework_hint") },
     { id: "grades", label: t("nav.grades"), hint: t("nav.grades_hint") },
+    { id: "library", label: t("nav.library"), hint: t("nav.library_hint") },
+    { id: "drive", label: t("nav.drive"), hint: t("nav.drive_hint") },
     { id: "chat", label: t("nav.chat"), hint: t("nav.chat_hint") },
     { id: "settings", label: t("nav.settings"), hint: t("nav.settings_hint") },
   ];

@@ -6,11 +6,13 @@ import { Layout } from "./components/Layout";
 import { ScheduleView } from "./components/ScheduleView";
 import { HomeworkView } from "./components/HomeworkView";
 import { GradesDashboard } from "./components/GradesDashboard";
+import { LibraryView } from "./components/LibraryView";
+import { DriveView } from "./components/DriveView";
 import { ChatPanel } from "./components/ChatPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 
-type View = "schedule" | "homework" | "grades" | "chat" | "settings";
+type View = "schedule" | "homework" | "grades" | "library" | "drive" | "chat" | "settings";
 
 function App() {
   const { t } = useTranslation();
@@ -39,6 +41,8 @@ function App() {
       {view === "schedule" && <ScheduleView />}
       {view === "homework" && <HomeworkView />}
       {view === "grades" && <GradesDashboard />}
+      {view === "library" && <LibraryView />}
+      {view === "drive" && <DriveView />}
       {view === "chat" && <ChatPanel />}
       {view === "settings" && <SettingsPanel />}
     </Layout>
