@@ -8,6 +8,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -64,6 +65,11 @@ class AccountUpdate(BaseModel):
 class AutoSyncRequest(BaseModel):
     enabled: bool
     interval_seconds: int = 1800
+
+
+class QrLoginRequest(BaseModel):
+    qr_data: dict[str, Any]
+    pin: str
 
 
 # ---------- read-only endpoints ---------------------------------------------
@@ -210,6 +216,15 @@ def settings_account_update(req: AccountUpdate) -> dict:
 @app.post("/api/settings/logout")
 def settings_logout() -> dict:
     return settings_mod.logout()
+
+
+@app.post("/api/settings/login-qr")
+async def settings_login_qr(req: QrLoginRequest) -> dict:
+    loop = asyncio.get_running_loop()
+    try:
+        return await loop.run_in_executor(None, settings_mod.login_qr, req.qr_data, req.pin)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
 
 
 @app.get("/api/settings/version")

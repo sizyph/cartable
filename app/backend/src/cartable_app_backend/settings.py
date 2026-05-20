@@ -93,13 +93,17 @@ def account_info() -> dict[str, Any]:
     if env_path.exists():
         env_vars = _parse_env(env_path.read_text())
     student = db.student_info() if _data_dir().joinpath("pronote.db").exists() else {}
+    has_url = bool(env_vars.get("PRONOTE_URL", ""))
+    has_username = bool(env_vars.get("PRONOTE_USERNAME", ""))
+    has_password = bool(env_vars.get("PRONOTE_PASSWORD", ""))
     return {
         "pronote_url": env_vars.get("PRONOTE_URL", ""),
         "auth_mode": env_vars.get("PRONOTE_AUTH_MODE", "password"),
         "username": env_vars.get("PRONOTE_USERNAME", ""),
         "ent_provider": env_vars.get("PRONOTE_ENT_PROVIDER", ""),
         "child_name": env_vars.get("PRONOTE_CHILD", ""),
-        "has_password": bool(env_vars.get("PRONOTE_PASSWORD", "")),
+        "has_password": has_password,
+        "is_configured": has_url and has_username and has_password,
         "env_path": str(env_path),
         "student": {
             "name": student.get("name") or "",
@@ -152,6 +156,83 @@ def logout() -> dict[str, Any]:
         if f.exists():
             f.unlink()
     return {"ok": True}
+
+
+# ---------- QR-code login ---------------------------------------------------
+
+
+def _stable_uuid() -> str:
+    """Read or create a stable per-installation UUID. Pronote ties tokens to it."""
+    import uuid as _uuid
+
+    data_dir = _data_dir()
+    data_dir.mkdir(parents=True, exist_ok=True)
+    f = data_dir / "device_uuid"
+    if f.exists():
+        return f.read_text().strip()
+    new = str(_uuid.uuid4())
+    f.write_text(new)
+    os.chmod(f, 0o600)
+    return new
+
+
+def login_qr(qr_data: dict[str, Any], pin: str) -> dict[str, Any]:
+    """Bootstrap an account from a Pronote mobile QR code + 4-digit PIN.
+
+    The QR JSON has {login, jeton, url}. After a successful handshake
+    pronotepy hands us back a rotating token in `client.password` — we
+    persist that into .env (so the CLI can `token_login` next time) and
+    drop a fresh token.json at the same time.
+    """
+    import pronotepy
+    import json as _json
+
+    required = {"login", "jeton", "url"}
+    if not required.issubset(qr_data):
+        raise ValueError(
+            f"QR payload missing keys {required - qr_data.keys()}. "
+            "Generate the code from Pronote mobile: Compte → Connecter un nouvel appareil."
+        )
+    if not (pin and pin.isdigit() and len(pin) == 4):
+        raise ValueError("PIN must be exactly 4 digits.")
+
+    uuid = _stable_uuid()
+    cls = (
+        pronotepy.ParentClient
+        if "parent.html" in qr_data["url"].lower()
+        else pronotepy.Client
+    )
+    try:
+        client = cls.qrcode_login(qr_data, pin, uuid)
+    except Exception as exc:  # noqa: BLE001 — pronotepy errors vary
+        raise ValueError(f"Pronote rejected the QR / PIN: {exc}") from exc
+
+    # Persist .env (without a real password — only the rotating token).
+    update_account({
+        "pronote_url": client.pronote_url,
+        "auth_mode": "password",
+        "username": client.username,
+        "password": client.password,
+    })
+
+    # Drop the freshly-issued credentials so the next sync uses token_login.
+    creds = client.export_credentials()
+    token_path = _data_dir() / "token.json"
+    token_path.write_text(_json.dumps(creds, indent=2))
+    os.chmod(token_path, 0o600)
+
+    info = client._selected_child if isinstance(client, pronotepy.ParentClient) else client.info
+    return {
+        "ok": True,
+        "url": client.pronote_url,
+        "username": client.username,
+        "student": {
+            "name": getattr(info, "name", None),
+            "class_name": getattr(info, "class_name", None),
+            "establishment": getattr(info, "establishment", None),
+        },
+        "is_parent_account": isinstance(client, pronotepy.ParentClient),
+    }
 
 
 # ---------- backup / restore -----------------------------------------------

@@ -176,9 +176,18 @@ export const api = {
       ent_provider: string;
       child_name: string;
       has_password: boolean;
+      is_configured: boolean;
       env_path: string;
       student: { name: string; class_name: string; establishment: string };
     }>("/api/settings/account"),
+  settingsLoginQr: (qrData: Record<string, any>, pin: string) =>
+    post<{
+      ok: boolean;
+      url: string;
+      username: string;
+      is_parent_account: boolean;
+      student: { name: string | null; class_name: string | null; establishment: string | null };
+    }>("/api/settings/login-qr", { qr_data: qrData, pin }),
   settingsAccountUpdate: (body: {
     pronote_url: string;
     auth_mode: string;
