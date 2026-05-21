@@ -2,17 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api, LibraryItem, LibraryItemInput } from "../api";
+import { TextbookWizard } from "./TextbookWizard";
 import clsx from "clsx";
 
 type Filter = "all" | "textbook" | "companion" | "reference";
 
-export function LibraryView() {
+export function LibraryView({ onJumpToChat }: { onJumpToChat?: (prompt: string) => void }) {
   const { t } = useTranslation();
   const items = useQuery({ queryKey: ["library", "items"], queryFn: api.libraryItems });
   const files = useQuery({ queryKey: ["library", "files"], queryFn: api.libraryFiles });
   const [filter, setFilter] = useState<Filter>("all");
   const [editing, setEditing] = useState<LibraryItem | null>(null);
   const [creating, setCreating] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const combined = useMemo<LibraryItem[]>(() => {
     const manual = items.data ?? [];
@@ -53,6 +55,12 @@ export function LibraryView() {
             ))}
           </div>
           <button
+            onClick={() => setWizardOpen(true)}
+            className="px-3 py-1.5 rounded-md bg-pap-surface border border-pap-border text-pap-text text-sm hover:bg-pap-surface-2"
+          >
+            📚 {t("library.suggest")}
+          </button>
+          <button
             onClick={() => {
               setCreating(true);
               setEditing(null);
@@ -63,6 +71,18 @@ export function LibraryView() {
           </button>
         </div>
       </header>
+
+      {wizardOpen && (
+        <div className="mb-6">
+          <TextbookWizard
+            onClose={() => setWizardOpen(false)}
+            onJumpToChat={(p) => {
+              setWizardOpen(false);
+              onJumpToChat?.(p);
+            }}
+          />
+        </div>
+      )}
 
       {(creating || editing) && (
         <div className="mb-6">

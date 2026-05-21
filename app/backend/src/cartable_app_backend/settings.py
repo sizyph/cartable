@@ -437,12 +437,17 @@ def check_update(repo: str = "Sizyph/cartable") -> dict[str, Any]:
 
     latest_tag = (data.get("tag_name") or "").lstrip("v")
     current = app_version()
+    assets = data.get("assets") or []
+    dmg = next((a for a in assets if (a.get("name") or "").endswith(".dmg")), None)
     return {
         "ok": True,
         "current": current,
         "latest": latest_tag,
         "is_newer": _is_newer(latest_tag, current),
         "html_url": data.get("html_url"),
+        "dmg_url": (dmg.get("browser_download_url") if dmg else None),
+        "dmg_name": (dmg.get("name") if dmg else None),
+        "dmg_size_bytes": (dmg.get("size") if dmg else None),
         "name": data.get("name"),
         "published_at": data.get("published_at"),
     }

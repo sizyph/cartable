@@ -20,6 +20,7 @@
     "title": "Library",
     "subtitle": "Textbooks, companion books, references. Drop PDFs here to surface them automatically:",
     "add": "Add entry",
+    "suggest": "Suggest textbooks",
     "edit": "Edit",
     "delete": "Delete",
     "open": "Open",
@@ -47,6 +48,17 @@
       "url": "URL (online viewer / publisher)",
       "file_path": "Local file (path inside data/library/)",
       "notes": "Notes"
+    },
+    "wizard": {
+      "title": "Manuels scolaires — find textbooks",
+      "subtitle": "Class: {{klass}} · School: {{establishment}}",
+      "ai_title": "🤖 Let Claude search the web",
+      "ai_intro": "Drops a ready-to-send prompt into Chat asking Claude to find the textbooks used at your school for this class. Claude will look at the school's website and propose entries you can add.",
+      "ai_button": "Open in Chat",
+      "quick_title": "Quick-add by subject",
+      "quick_intro": "Common French Lycée textbooks. Click to add an entry — you can edit the URL afterwards.",
+      "publishers_title": "Known publishers / online readers",
+      "publishers_intro": "Where to find digital versions: Bordas, Nathan/mesmanuels.fr, Hachette Lib Manuels, etc. Add URLs manually in the entry form."
     }
   },
   "drive": {
@@ -235,6 +247,7 @@
       "check_updates": "Check for updates",
       "checking": "Checking…",
       "update_available": "Update available: v{{version}}",
+      "download_dmg": "Download .dmg",
       "release_notes": "Release notes ↗",
       "up_to_date": "Up to date (latest: v{{version}})",
       "no_releases": "No releases published yet."

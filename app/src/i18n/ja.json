@@ -20,6 +20,7 @@
     "title": "ライブラリ",
     "subtitle": "教科書・参考書・資料。次のフォルダに PDF を入れると自動的に表示されます:",
     "add": "エントリを追加",
+    "suggest": "教科書を提案",
     "edit": "編集",
     "delete": "削除",
     "open": "開く",
@@ -47,6 +48,17 @@
       "url": "URL (オンラインビューアー/出版社)",
       "file_path": "ローカルファイル (data/library/ 内のパス)",
       "notes": "メモ"
+    },
+    "wizard": {
+      "title": "教科書を探す",
+      "subtitle": "クラス: {{klass}} · 学校: {{establishment}}",
+      "ai_title": "🤖 Claude にウェブ検索を依頼",
+      "ai_intro": "今年度この学校で使われている教科書を Claude に探してもらうプロンプトを Chat に投入します。学校のサイトを参照して候補を提案します。",
+      "ai_button": "Chat で開く",
+      "quick_title": "教科ごとのクイック追加",
+      "quick_intro": "フランスの高校 (Lycée) でよく使われる教科書です。クリックで登録 — URL は後から編集できます。",
+      "publishers_title": "既知の出版社・オンラインビューアー",
+      "publishers_intro": "デジタル版の入手先: Bordas, Nathan / mesmanuels.fr, Hachette Lib Manuels など。URL は入力フォームで手動追加してください。"
     }
   },
   "drive": {
@@ -235,6 +247,7 @@
       "check_updates": "アップデートを確認",
       "checking": "確認中…",
       "update_available": "アップデートあり: v{{version}}",
+      "download_dmg": ".dmg をダウンロード",
       "release_notes": "リリースノート ↗",
       "up_to_date": "最新です (最新版: v{{version}})",
       "no_releases": "まだリリースは公開されていません。"

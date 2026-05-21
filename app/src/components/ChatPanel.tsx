@@ -14,7 +14,13 @@ type ChatMessage =
 
 let nextId = 1;
 
-export function ChatPanel() {
+export function ChatPanel({
+  pendingPrompt,
+  onPendingConsumed,
+}: {
+  pendingPrompt?: string | null;
+  onPendingConsumed?: () => void;
+} = {}) {
   const { t } = useTranslation();
   const starterPrompts = t("chat.starters", { returnObjects: true }) as string[];
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -27,6 +33,18 @@ export function ChatPanel() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  // Cross-tab handoff: when another view jumps to chat with a prompt, drop
+  // it into the input and focus so the user can review + send.
+  useEffect(() => {
+    if (pendingPrompt) {
+      setInput(pendingPrompt);
+      onPendingConsumed?.();
+      // tiny delay — wait for the input ref to mount after view switch
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPrompt]);
 
   async function send(text: string) {
     if (!text.trim() || streaming) return;

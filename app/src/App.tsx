@@ -17,6 +17,9 @@ type View = "schedule" | "homework" | "grades" | "library" | "drive" | "chat" | 
 function App() {
   const { t } = useTranslation();
   const [view, setView] = useState<View>("schedule");
+  // Cross-tab handoff: when Library asks Claude to find textbooks, the chat
+  // tab opens with a pre-filled prompt waiting to be sent.
+  const [pendingChatPrompt, setPendingChatPrompt] = useState<string | null>(null);
 
   // Gate: if the backend has no usable .env, show the welcome flow.
   const account = useQuery({
@@ -36,14 +39,24 @@ function App() {
     return <WelcomeScreen />;
   }
 
+  function jumpToChat(prompt: string) {
+    setPendingChatPrompt(prompt);
+    setView("chat");
+  }
+
   return (
     <Layout active={view} onChange={setView}>
       {view === "schedule" && <ScheduleView />}
       {view === "homework" && <HomeworkView />}
       {view === "grades" && <GradesDashboard />}
-      {view === "library" && <LibraryView />}
+      {view === "library" && <LibraryView onJumpToChat={jumpToChat} />}
       {view === "drive" && <DriveView />}
-      {view === "chat" && <ChatPanel />}
+      {view === "chat" && (
+        <ChatPanel
+          pendingPrompt={pendingChatPrompt}
+          onPendingConsumed={() => setPendingChatPrompt(null)}
+        />
+      )}
       {view === "settings" && <SettingsPanel />}
     </Layout>
   );

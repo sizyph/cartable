@@ -20,6 +20,7 @@
     "title": "Bibliothèque",
     "subtitle": "Manuels, ouvrages d'accompagnement, références. Glissez des PDF dans :",
     "add": "Ajouter une entrée",
+    "suggest": "Suggérer des manuels",
     "edit": "Modifier",
     "delete": "Supprimer",
     "open": "Ouvrir",
@@ -47,6 +48,17 @@
       "url": "URL (lecteur en ligne / éditeur)",
       "file_path": "Fichier local (chemin dans data/library/)",
       "notes": "Notes"
+    },
+    "wizard": {
+      "title": "Manuels scolaires — trouver les manuels",
+      "subtitle": "Classe : {{klass}} · École : {{establishment}}",
+      "ai_title": "🤖 Demander à Claude de chercher sur le web",
+      "ai_intro": "Prépare un prompt à envoyer dans le Chat pour que Claude trouve les manuels utilisés cette année. Il consultera le site de l'école et proposera des entrées à ajouter.",
+      "ai_button": "Ouvrir dans le Chat",
+      "quick_title": "Ajout rapide par matière",
+      "quick_intro": "Manuels courants en Lycée français. Cliquez pour créer une entrée — vous pourrez ensuite ajouter l'URL.",
+      "publishers_title": "Éditeurs / lecteurs en ligne connus",
+      "publishers_intro": "Où trouver les versions numériques : Bordas, Nathan / mesmanuels.fr, Hachette Lib Manuels, etc. Ajoutez les URL manuellement dans le formulaire d'entrée."
     }
   },
   "drive": {
@@ -235,6 +247,7 @@
       "check_updates": "Vérifier les mises à jour",
       "checking": "Vérification…",
       "update_available": "Mise à jour disponible : v{{version}}",
+      "download_dmg": "Télécharger le .dmg",
       "release_notes": "Notes de version ↗",
       "up_to_date": "À jour (dernière : v{{version}})",
       "no_releases": "Aucune version publiée pour l'instant."

@@ -26,7 +26,7 @@ from . import (
 )
 
 log = logging.getLogger("cartable_app")
-app = FastAPI(title="Cartable", version="0.1.0")
+app = FastAPI(title="Cartable", version="0.1.2")
 
 # Tauri's dev server runs on 1420 (Vite). In production, the Tauri webview
 # loads the bundled assets and hits us via localhost — same-origin in practice,

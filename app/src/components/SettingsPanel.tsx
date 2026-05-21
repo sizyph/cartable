@@ -359,21 +359,30 @@ function AboutSection() {
           {check.data?.ok && (
             <span className="text-xs">
               {check.data.is_newer ? (
-                <>
+                <span className="flex items-center gap-2 flex-wrap">
                   <span className="text-pap-good font-medium">
                     {t("settings.about.update_available", { version: check.data.latest })}
                   </span>
+                  {check.data.dmg_url && (
+                    <a
+                      href={check.data.dmg_url}
+                      className="px-3 py-1 rounded-md bg-pap-accent text-pap-bg text-xs font-medium hover:bg-pap-accent/85"
+                      download
+                    >
+                      {t("settings.about.download_dmg")}
+                    </a>
+                  )}
                   {check.data.html_url && (
                     <a
                       href={check.data.html_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="ml-2 text-pap-accent underline"
+                      className="text-pap-accent underline"
                     >
                       {t("settings.about.release_notes")}
                     </a>
                   )}
-                </>
+                </span>
               ) : check.data.latest ? (
                 <span className="text-pap-muted">
                   {t("settings.about.up_to_date", { version: check.data.latest })}

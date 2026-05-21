@@ -227,6 +227,9 @@ export const api = {
       latest?: string | null;
       is_newer?: boolean;
       html_url?: string;
+      dmg_url?: string | null;
+      dmg_name?: string | null;
+      dmg_size_bytes?: number | null;
       name?: string;
       published_at?: string;
     }>("/api/settings/update-check"),

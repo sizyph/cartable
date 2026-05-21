@@ -137,8 +137,11 @@ def make_options(session_id: str | None) -> sdk.ClaudeAgentOptions:
     return sdk.ClaudeAgentOptions(
         cwd=str(CARTABLE_DIR),
         # The cartable skill tells the model exactly which Bash/Read commands
-        # are useful, so we authorise those tools broadly.
-        allowed_tools=["Bash", "Read", "Glob", "Grep"],
+        # are useful, so we authorise those tools broadly. WebFetch and
+        # WebSearch are enabled so the agent can look up textbook info from
+        # publisher catalogues or the school's website when the user asks
+        # for "find the textbooks for my child's class".
+        allowed_tools=["Bash", "Read", "Glob", "Grep", "WebFetch", "WebSearch"],
         skills=["cartable"],
         setting_sources=["user"],
         permission_mode="bypassPermissions",

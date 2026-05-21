@@ -1,6 +1,6 @@
 [project]
 name = "pronote-cli"
-version = "0.1.0"
+version = "0.1.2"
 description = "Local sync of Pronote data (grades, homework, lessons, teachers, absences) into SQLite. The CLI binary is `cartable` for backwards compatibility with the umbrella project."
 readme = "README.md"
 license = { file = "LICENSE" }

@@ -1,6 +1,6 @@
 [project]
 name = "cartable-app-backend"
-version = "0.1.0"
+version = "0.1.2"
 description = "Local HTTP backend for the Cartable Mac app — reads cartable's SQLite, exposes typed queries, hosts the Claude agent and the Google Calendar sync."
 requires-python = ">=3.12"
 dependencies = [
