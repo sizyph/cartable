@@ -189,6 +189,30 @@
   "settings": {
     "title": "Paramètres",
     "subtitle": "Compte, synchronisation, sauvegarde, version.",
+    "connection": {
+      "title": "Test de connexion",
+      "subtitle": "Vérifie tout le pipeline Pronote et indique ce qui fonctionne — relancez si des données ne s'affichent plus.",
+      "run": "Lancer le test",
+      "running": "Test en cours…",
+      "idle": "Pas encore testé. Cliquez sur Lancer pour parcourir le pipeline Pronote (~15 s).",
+      "overall": {
+        "ok": "Toutes les vérifications OK ({{ms}} ms).",
+        "warning": "OK avec avertissements ({{ms}} ms).",
+        "error": "Échecs détectés ({{ms}} ms)."
+      },
+      "check": {
+        "login": "Connexion",
+        "student_info": "Infos élève",
+        "periods": "Périodes",
+        "grades": "Notes",
+        "averages": "Moyennes",
+        "homework": "Devoirs",
+        "lessons": "Cours",
+        "bulletins": "Bulletins",
+        "teaching_staff": "Professeurs",
+        "information": "Informations"
+      }
+    },
     "account": {
       "title": "Compte",
       "student": "Élève",
@@ -255,6 +279,12 @@
   },
   "welcome": {
     "title": "Bienvenue dans Cartable",
+    "cli": {
+      "found_title": "Identifiants Cartable déjà présents",
+      "found_intro": "Des identifiants Pronote ont été trouvés dans l'installation CLI (utilisateur : {{username}}). Un clic et on les transfère dans votre trousseau macOS — pas besoin de tout retaper.",
+      "import": "Importer dans le trousseau",
+      "importing": "Import en cours…"
+    },
     "intro": "Cartable copie le compte Pronote de votre enfant dans une base SQLite locale, pour que cette appli Mac affiche les notes, devoirs, emploi du temps, bulletins publiés, et un chat assisté par Claude — <0>sans rien envoyer hors de votre machine</0>. Commençons par connecter Pronote.",
     "choice_qr": "Scanner le QR depuis Pronote mobile",
     "choice_qr_sub": "Sur l'appli Pronote du téléphone → Mon compte → Connecter un nouvel appareil. Choisissez un code à 4 chiffres, puis déposez la capture du QR ici.",

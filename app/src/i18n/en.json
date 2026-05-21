@@ -189,6 +189,30 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Account, sync, backup, app version.",
+    "connection": {
+      "title": "Connection test",
+      "subtitle": "Walks the full Pronote pipeline and shows what works — re-run this if data stops appearing in any tab.",
+      "run": "Run test",
+      "running": "Testing…",
+      "idle": "No test run yet. Click Run to walk the Pronote pipeline (~15 s).",
+      "overall": {
+        "ok": "All checks passed ({{ms}} ms).",
+        "warning": "Passed with warnings ({{ms}} ms).",
+        "error": "Some checks failed ({{ms}} ms)."
+      },
+      "check": {
+        "login": "Login",
+        "student_info": "Student info",
+        "periods": "Periods",
+        "grades": "Grades",
+        "averages": "Averages",
+        "homework": "Homework",
+        "lessons": "Lessons",
+        "bulletins": "Bulletins",
+        "teaching_staff": "Teachers",
+        "information": "Information"
+      }
+    },
     "account": {
       "title": "Account",
       "student": "Student",
@@ -255,6 +279,12 @@
   },
   "welcome": {
     "title": "Welcome to Cartable",
+    "cli": {
+      "found_title": "Existing Cartable credentials detected",
+      "found_intro": "We found Pronote credentials at the cartable CLI install (user: {{username}}). One click and we'll move them into your macOS Keychain — no need to retype anything.",
+      "import": "Import to Keychain",
+      "importing": "Importing…"
+    },
     "intro": "Cartable mirrors your child's Pronote account into a local SQLite database, so this Mac app can show grades, homework, the weekly schedule, published bulletins, and a Claude-powered chat — all <0>without sending anything off your machine</0>. First, let's connect to Pronote.",
     "choice_qr": "Scan QR from Pronote mobile",
     "choice_qr_sub": "Open Pronote on your phone → Mon compte → Connecter un nouvel appareil. Pick a 4-digit code, then drop the QR screenshot here.",

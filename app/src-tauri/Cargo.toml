@@ -1,6 +1,6 @@
 [package]
 name = "cartable-app"
-version = "0.1.2"
+version = "0.1.3"
 description = "Cartable — local Mac app for Pronote data."
 authors = ["Sizyph"]
 edition = "2021"

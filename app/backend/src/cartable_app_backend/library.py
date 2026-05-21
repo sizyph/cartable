@@ -65,8 +65,9 @@ def create_item(payload: dict[str, Any]) -> dict[str, Any]:
         raise ValueError(f"kind must be one of {ALLOWED_KINDS}")
     url = (payload.get("url") or "").strip() or None
     file_path = (payload.get("file_path") or "").strip() or None
-    if not url and not file_path:
-        raise ValueError("Either a URL or a file_path is required.")
+    # We used to reject entries without a URL or file path. Quick-add buttons
+    # in the wizard create entries that only have a title + subject + notes,
+    # so the user can fill the URL later when they find one. Allow that.
 
     now = _now()
     with _conn_rw() as c:

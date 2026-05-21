@@ -23,10 +23,87 @@ export function SettingsPanel() {
       </header>
 
       <AccountSection />
+      <ConnectionTestSection />
       <AutoSyncSection />
       <BackupSection />
       <AboutSection />
     </div>
+  );
+}
+
+// ---------- Connection test --------------------------------------------------
+
+function ConnectionTestSection() {
+  const { t } = useTranslation();
+  const test = useMutation({ mutationFn: api.settingsConnectionTest });
+
+  const overallColor = (() => {
+    if (!test.data) return "text-pap-muted";
+    if (test.data.overall_status === "ok") return "text-pap-good";
+    if (test.data.overall_status === "warning") return "text-pap-warn";
+    return "text-pap-bad";
+  })();
+
+  return (
+    <Card title={t("settings.connection.title")} subtitle={t("settings.connection.subtitle")}>
+      <div className="space-y-3 text-sm">
+        <div className="flex items-center gap-3">
+          <Btn variant="accent" onClick={() => test.mutate()} disabled={test.isPending}>
+            {test.isPending ? t("settings.connection.running") : t("settings.connection.run")}
+          </Btn>
+          {test.data && (
+            <span className={clsx("text-xs", overallColor)}>
+              {t(`settings.connection.overall.${test.data.overall_status}`, {
+                ms: test.data.duration_ms,
+              })}
+            </span>
+          )}
+          {test.error && (
+            <span className="text-xs text-pap-bad">{(test.error as Error).message}</span>
+          )}
+        </div>
+
+        {test.data && (
+          <ul className="divide-y divide-pap-border rounded-md border border-pap-border overflow-hidden">
+            {test.data.checks.map((c) => (
+              <li
+                key={c.name}
+                className="px-3 py-2 flex items-center gap-3 bg-pap-surface-2"
+              >
+                <Dot status={c.status} />
+                <span className="text-xs font-medium w-32 shrink-0">
+                  {t(`settings.connection.check.${c.name}`, { defaultValue: c.name })}
+                </span>
+                <span className="text-xs text-pap-muted flex-1 min-w-0 truncate" title={c.message}>
+                  {c.message ?? "—"}
+                </span>
+                <span className="text-[10px] text-pap-muted tabular-nums">
+                  {c.duration_ms} ms
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {!test.data && (
+          <p className="text-xs text-pap-muted italic">{t("settings.connection.idle")}</p>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function Dot({ status }: { status: "ok" | "warning" | "error" }) {
+  return (
+    <span
+      className={clsx(
+        "inline-block w-2.5 h-2.5 rounded-full shrink-0",
+        status === "ok" && "bg-pap-good",
+        status === "warning" && "bg-pap-warn",
+        status === "error" && "bg-pap-bad",
+      )}
+      aria-label={status}
+    />
   );
 }
 

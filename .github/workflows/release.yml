@@ -68,7 +68,9 @@ jobs:
             --collect-all google_auth_oauthlib \
             --collect-all claude_agent_sdk \
             --collect-all pronotepy \
+            --collect-all keyring \
             --collect-submodules cartable_app_backend \
+            --collect-submodules pronote_cli \
             src/cartable_app_backend/__main__.py
           mkdir -p ../src-tauri/binaries
           cp dist/cartable-app-backend-aarch64-apple-darwin ../src-tauri/binaries/

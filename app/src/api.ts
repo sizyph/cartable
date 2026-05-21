@@ -190,6 +190,7 @@ export const api = {
       child_name: string;
       has_password: boolean;
       is_configured: boolean;
+      stored_in?: string;
       env_path: string;
       student: { name: string; class_name: string; establishment: string };
     }>("/api/settings/account"),
@@ -210,6 +211,32 @@ export const api = {
     child_name?: string;
   }) => post<{ ok: boolean }>("/api/settings/account", body),
   settingsLogout: () => post<{ ok: boolean }>("/api/settings/logout"),
+  settingsCliEnv: () =>
+    get<{
+      found: boolean;
+      path: string;
+      pronote_url?: string;
+      username?: string;
+      auth_mode?: string;
+      ent_provider?: string;
+      child_name?: string;
+      has_password?: boolean;
+    }>("/api/settings/cli-env"),
+  settingsImportCli: () =>
+    post<{ ok: boolean; imported_username: string }>("/api/settings/import-cli"),
+  settingsConnectionTest: () =>
+    post<{
+      ok: boolean;
+      overall_status: "ok" | "warning" | "error";
+      started_at: string;
+      duration_ms: number;
+      checks: Array<{
+        name: string;
+        status: "ok" | "warning" | "error";
+        duration_ms: number;
+        message?: string;
+      }>;
+    }>("/api/settings/connection-test"),
   settingsVersion: () =>
     get<{
       version: string;

@@ -189,6 +189,30 @@
   "settings": {
     "title": "設定",
     "subtitle": "アカウント、同期、バックアップ、バージョン。",
+    "connection": {
+      "title": "接続テスト",
+      "subtitle": "Pronote パイプライン全体を走査し、どの機能が動作しているか表示します。データが表示されなくなったら再実行してください。",
+      "run": "テスト実行",
+      "running": "テスト中…",
+      "idle": "まだ実行していません。「テスト実行」で Pronote パイプラインを確認します (約 15 秒)。",
+      "overall": {
+        "ok": "すべて成功 ({{ms}} ms)。",
+        "warning": "成功 (警告あり) ({{ms}} ms)。",
+        "error": "一部失敗 ({{ms}} ms)。"
+      },
+      "check": {
+        "login": "ログイン",
+        "student_info": "生徒情報",
+        "periods": "学期",
+        "grades": "成績",
+        "averages": "平均",
+        "homework": "宿題",
+        "lessons": "授業",
+        "bulletins": "通知表",
+        "teaching_staff": "先生",
+        "information": "お知らせ"
+      }
+    },
     "account": {
       "title": "アカウント",
       "student": "生徒",
@@ -255,6 +279,12 @@
   },
   "welcome": {
     "title": "Cartable へようこそ",
+    "cli": {
+      "found_title": "Cartable の既存認証情報を検出",
+      "found_intro": "CLI 側に Pronote の認証情報が見つかりました (ユーザー: {{username}})。クリック一つで macOS キーチェーンへ移行できます — 再入力は不要です。",
+      "import": "キーチェーンに取り込む",
+      "importing": "取り込み中…"
+    },
     "intro": "Cartable はお子様の Pronote アカウントをローカルの SQLite データベースに複製します。この Mac アプリで成績、宿題、週の時間割、公開済み通知表、Claude によるチャットが利用できます — <0>すべてご自身のマシン内で完結</0>。まずは Pronote に接続しましょう。",
     "choice_qr": "Pronote モバイルから QR をスキャン",
     "choice_qr_sub": "スマホの Pronote アプリで → アカウント → 新しいデバイスを接続。4 桁のコードを決めて、QR のスクショをここに置いてください。",

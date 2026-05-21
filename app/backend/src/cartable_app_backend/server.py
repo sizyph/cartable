@@ -19,6 +19,7 @@ from . import (
     agent,
     bulletin_html,
     calendar_sync,
+    connection_test as conn_test_mod,
     db,
     drive as drive_mod,
     library,
@@ -26,7 +27,7 @@ from . import (
 )
 
 log = logging.getLogger("cartable_app")
-app = FastAPI(title="Cartable", version="0.1.2")
+app = FastAPI(title="Cartable", version="0.1.3")
 
 # Tauri's dev server runs on 1420 (Vite). In production, the Tauri webview
 # loads the bundled assets and hits us via localhost — same-origin in practice,
@@ -239,6 +240,28 @@ def settings_account_update(req: AccountUpdate) -> dict:
 @app.post("/api/settings/logout")
 def settings_logout() -> dict:
     return settings_mod.logout()
+
+
+@app.get("/api/settings/cli-env")
+def settings_cli_env() -> dict:
+    return settings_mod.detect_cli_env()
+
+
+@app.post("/api/settings/import-cli")
+def settings_import_cli() -> dict:
+    try:
+        return settings_mod.import_from_cli()
+    except (FileNotFoundError, ValueError) as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/api/settings/connection-test")
+async def settings_connection_test() -> dict:
+    loop = asyncio.get_running_loop()
+    try:
+        return await loop.run_in_executor(None, conn_test_mod.run)
+    except RuntimeError as exc:
+        raise HTTPException(412, str(exc)) from exc
 
 
 @app.post("/api/settings/login-qr")

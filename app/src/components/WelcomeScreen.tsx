@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import jsQR from "jsqr";
 import { Trans, useTranslation } from "react-i18next";
@@ -14,12 +14,67 @@ export function WelcomeScreen() {
     <div className="min-h-screen flex items-center justify-center p-8 bg-pap-bg">
       <div className="w-full max-w-2xl rounded-2xl border border-pap-border bg-pap-surface p-10 shadow-2xl">
         <Hero />
-        <div className="mt-8">
-          {step === "intro" && <IntroChoices onPick={setStep} />}
+        <div className="mt-8 space-y-4">
+          {step === "intro" && (
+            <>
+              <CliImportBanner />
+              <IntroChoices onPick={setStep} />
+            </>
+          )}
           {step === "manual" && <ManualLogin onBack={() => setStep("intro")} />}
           {step === "qr" && <QrLogin onBack={() => setStep("intro")} />}
         </div>
         <LanguageRow />
+      </div>
+    </div>
+  );
+}
+
+/** Detect a pre-existing CLI `.env` and offer to import it into Keychain. */
+function CliImportBanner() {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const detect = useQuery({
+    queryKey: ["settings", "cli-env"],
+    queryFn: api.settingsCliEnv,
+    staleTime: 60_000,
+  });
+  const importCli = useMutation({
+    mutationFn: api.settingsImportCli,
+    onSuccess: () => qc.invalidateQueries(),
+  });
+
+  if (!detect.data?.found || !detect.data.has_password) return null;
+
+  return (
+    <div className="rounded-xl border border-pap-good/40 bg-pap-good/10 p-4 text-sm">
+      <div className="flex items-start gap-3">
+        <div className="text-2xl shrink-0">✨</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-pap-good">
+            {t("welcome.cli.found_title")}
+          </div>
+          <p className="text-xs text-pap-muted mt-1 leading-relaxed">
+            {t("welcome.cli.found_intro", {
+              username: detect.data.username || "?",
+            })}
+          </p>
+          <p className="text-xs text-pap-muted mt-1 truncate" title={detect.data.path}>
+            <code>{detect.data.path}</code>
+          </p>
+          {importCli.error && (
+            <p className="text-xs text-pap-bad mt-2">
+              {(importCli.error as Error).message}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={() => importCli.mutate()}
+          disabled={importCli.isPending}
+          className="px-3 py-1.5 rounded-md bg-pap-good text-pap-bg text-xs font-medium hover:bg-pap-good/85 disabled:opacity-50 shrink-0"
+        >
+          {importCli.isPending ? t("welcome.cli.importing") : t("welcome.cli.import")}
+        </button>
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from . import db
+from . import db, secure_creds
 
 # ---------- paths -----------------------------------------------------------
 
@@ -88,23 +88,19 @@ def _format_env(values: dict[str, str], example_path: Path | None = None) -> str
 
 def account_info() -> dict[str, Any]:
     """Account-related state shown in Settings (no password, no token)."""
-    env_path = _env_path()
-    env_vars: dict[str, str] = {}
-    if env_path.exists():
-        env_vars = _parse_env(env_path.read_text())
+    acc = secure_creds.load()
+    has_pw = secure_creds.has_password()
     student = db.student_info() if _data_dir().joinpath("pronote.db").exists() else {}
-    has_url = bool(env_vars.get("PRONOTE_URL", ""))
-    has_username = bool(env_vars.get("PRONOTE_USERNAME", ""))
-    has_password = bool(env_vars.get("PRONOTE_PASSWORD", ""))
     return {
-        "pronote_url": env_vars.get("PRONOTE_URL", ""),
-        "auth_mode": env_vars.get("PRONOTE_AUTH_MODE", "password"),
-        "username": env_vars.get("PRONOTE_USERNAME", ""),
-        "ent_provider": env_vars.get("PRONOTE_ENT_PROVIDER", ""),
-        "child_name": env_vars.get("PRONOTE_CHILD", ""),
-        "has_password": has_password,
-        "is_configured": has_url and has_username and has_password,
-        "env_path": str(env_path),
+        "pronote_url": acc.get("pronote_url", ""),
+        "auth_mode": acc.get("auth_mode", "password"),
+        "username": acc.get("username", ""),
+        "ent_provider": acc.get("ent_provider", ""),
+        "child_name": acc.get("child_name", ""),
+        "has_password": has_pw,
+        "is_configured": bool(acc.get("pronote_url") and acc.get("username") and has_pw),
+        "stored_in": "macOS Keychain",
+        "env_path": str(_env_path()),  # legacy path (the CLI mirror)
         "student": {
             "name": student.get("name") or "",
             "class_name": student.get("class_name") or "",
@@ -114,31 +110,24 @@ def account_info() -> dict[str, Any]:
 
 
 def update_account(payload: dict[str, Any]) -> dict[str, Any]:
-    """Write a new .env from the supplied fields.
+    """Persist credentials. Keychain is the primary store; the CLI .env is
+    rewritten as a mirror so launchd-driven auto-sync keeps working.
 
-    The password is only overwritten when a non-empty value is supplied; this
-    lets the UI keep the field blank to mean "leave the existing password in
-    place".
+    `password` empty/None means "keep the current Keychain value".
     """
-    env_path = _env_path()
-    current = _parse_env(env_path.read_text()) if env_path.exists() else {}
+    # Defensive: require URL + username; password can stay empty to keep current.
+    if not (payload.get("pronote_url") or "").strip():
+        raise ValueError("PRONOTE_URL is required")
+    if not (payload.get("username") or "").strip():
+        raise ValueError("PRONOTE_USERNAME is required")
 
-    new_password = payload.get("password") or current.get("PRONOTE_PASSWORD", "")
-    values = {
-        "PRONOTE_URL": (payload.get("pronote_url") or current.get("PRONOTE_URL", "")).strip(),
-        "PRONOTE_AUTH_MODE": (payload.get("auth_mode") or current.get("PRONOTE_AUTH_MODE", "password")).strip(),
-        "PRONOTE_USERNAME": (payload.get("username") or current.get("PRONOTE_USERNAME", "")).strip(),
-        "PRONOTE_PASSWORD": new_password,
-        "PRONOTE_ENT_PROVIDER": (payload.get("ent_provider") or "").strip(),
-        "PRONOTE_CHILD": (payload.get("child_name") or "").strip(),
-        "CARTABLE_DATA_DIR": current.get("CARTABLE_DATA_DIR", ""),
-    }
+    pwd = (payload.get("password") or "").strip()
+    # On a brand-new account, the password is mandatory.
+    if not pwd and not secure_creds.has_password():
+        raise ValueError("Password is required for the initial account setup.")
 
-    if not values["PRONOTE_URL"] or not values["PRONOTE_USERNAME"] or not values["PRONOTE_PASSWORD"]:
-        raise ValueError("PRONOTE_URL, PRONOTE_USERNAME and PRONOTE_PASSWORD are all required.")
+    secure_creds.save(payload, password=pwd or None)
 
-    env_path.write_text(_format_env(values, CARTABLE_DIR / ".env.example"))
-    os.chmod(env_path, 0o600)
     # Drop the rotating token — credentials may have changed.
     token_file = _data_dir() / "token.json"
     if token_file.exists():
@@ -148,14 +137,20 @@ def update_account(payload: dict[str, Any]) -> dict[str, Any]:
 
 def logout() -> dict[str, Any]:
     """Wipe credentials and the rotating token. The DB is preserved."""
-    env_path = _env_path()
-    if env_path.exists():
-        env_path.unlink()
+    secure_creds.clear()  # Keychain entries + JSON + .env mirror
     for fname in ("token.json", "device_uuid"):
         f = _data_dir() / fname
         if f.exists():
             f.unlink()
     return {"ok": True}
+
+
+def detect_cli_env() -> dict[str, Any]:
+    return secure_creds.detect_cli_env()
+
+
+def import_from_cli() -> dict[str, Any]:
+    return secure_creds.import_from_cli()
 
 
 # ---------- QR-code login ---------------------------------------------------
@@ -207,16 +202,21 @@ def login_qr(qr_data: dict[str, Any], pin: str) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001 — pronotepy errors vary
         raise ValueError(f"Pronote rejected the QR / PIN: {exc}") from exc
 
-    # Persist .env (without a real password — only the rotating token).
-    update_account({
-        "pronote_url": client.pronote_url,
-        "auth_mode": "password",
-        "username": client.username,
-        "password": client.password,
-    })
+    # Persist credentials. `client.password` is the rotating token from
+    # Pronote, NOT the user's real password — it's enough for token_login
+    # to work next time.
+    secure_creds.save(
+        {
+            "pronote_url": client.pronote_url,
+            "auth_mode": "password",
+            "username": client.username,
+        },
+        password=client.password,
+    )
 
-    # Drop the freshly-issued credentials so the next sync uses token_login.
+    # Stash the freshly-issued credentials so the next sync uses token_login.
     creds = client.export_credentials()
+    secure_creds.save_token_blob(_json.dumps(creds))
     token_path = _data_dir() / "token.json"
     token_path.write_text(_json.dumps(creds, indent=2))
     os.chmod(token_path, 0o600)
